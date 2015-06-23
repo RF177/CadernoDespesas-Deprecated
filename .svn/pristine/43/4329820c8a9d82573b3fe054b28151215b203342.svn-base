@@ -1,0 +1,120 @@
+package br.com.simdata.forcavendas.view;
+
+import java.util.List;
+
+import br.com.simdata.forcavendas.R;
+import br.com.simdata.forcavendas.dao.ProdutoDAO;
+import br.com.simdata.forcavendas.dao.ProdutoPrecoDAO;
+import br.com.simdata.forcavendas.model.cadastro.Produto;
+import br.com.simdata.forcavendas.model.cadastro.ProdutoPreco;
+import br.com.simdata.forcavendas.model.venda.PedidoItem;
+import android.os.Bundle;
+import android.widget.LinearLayout;
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
+
+public class ListProdutosActivity extends Activity {
+	
+	private ProdutoDAO produtoDAO = new ProdutoDAO(this);
+	private ProdutoPrecoDAO produtoPrecoDAO = new ProdutoPrecoDAO(this);
+	
+	private List<Produto> produtos;
+	
+    private LinearLayout linear_listview_produtos;			
+	private Button btn_list_produtos_voltar, btn_list_produtos_pesquisa;
+	private EditText edit_produto_pesquisa;
+		
+	boolean selecionar = false;	
+	
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.list_produtos);		
+			
+		Intent intent = getIntent();	    
+	    String p_selecionar = intent.getStringExtra("SELECIONAR");
+        if(p_selecionar != null && p_selecionar.equals("true")){
+        	selecionar = true;     
+        }		
+				
+		linear_listview_produtos = (LinearLayout) findViewById(R.id.linear_listview_produtos);		
+		btn_list_produtos_voltar = (Button) findViewById(R.id.btn_list_produtos_voltar);	
+		btn_list_produtos_pesquisa = (Button) findViewById(R.id.btn_list_produtos_pesquisa);
+		edit_produto_pesquisa = (EditText) findViewById(R.id.edit_produto_pesquisa);
+		
+		btn_list_produtos_voltar.setOnClickListener(new View.OnClickListener() {//Botao voltar
+			public void onClick(View v) {
+				if(selecionar && FormPedidoActivity.pedido.getItems() != null){					
+					Intent intent = new Intent(ListProdutosActivity.this, ListPedidoItemsActivity.class);					
+					startActivity(intent);					
+					finish();					
+				}else{
+					Intent myIntent = new Intent(ListProdutosActivity.this, MainActivity.class);
+					startActivity(myIntent);
+					finish();
+					return;
+				}
+			}
+		});		
+	
+		btn_list_produtos_pesquisa.setOnClickListener(new View.OnClickListener() {//Botao pesquisar
+			public void onClick(View v) {
+				filtrar();
+			}
+		});				
+	}
+	
+	public void filtrar(){		
+		String filtro = edit_produto_pesquisa.getText().toString();
+		
+		produtoDAO.open();		
+		produtos = produtoDAO.ListAll(filtro);
+		produtoDAO.close();
+		
+		linear_listview_produtos.removeAllViews();//Remove a lista antiga, para criar novamente
+				
+		for(Produto produto : produtos){				
+			LayoutInflater inflater = (LayoutInflater) getApplicationContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+			final View mLinearView = inflater.inflate(R.layout.list_produto_row, null);
+			mLinearView.setId(produto.getId_produto().intValue());
+			
+			produtoPrecoDAO.open();
+			List<ProdutoPreco> precos = produtoPrecoDAO.ListAllbyProduto(produto.getId_produto());
+			produtoPrecoDAO.close();
+			
+			TextView edit_list_produto_row_descricao  = (TextView) mLinearView.findViewById(R.id.edit_list_produto_row_descricao);
+			TextView edit_list_produto_row_preco = (TextView) mLinearView.findViewById(R.id.edit_list_produto_row_preco);
+			TextView edit_list_produto_row_estoque = (TextView) mLinearView.findViewById(R.id.edit_list_produto_row_estoque);												
+			edit_list_produto_row_descricao.setText(produto.getCodigo()+" - "+produto.getDescricao());
+			edit_list_produto_row_preco.setText("Preço: "+ (precos.size() > 0 ? precos.get(0).getVl_preco() : 0.00));
+			edit_list_produto_row_estoque.setText("Estoque: "+produto.getQtdestoque());
+			
+			linear_listview_produtos.addView(mLinearView);
+		 		
+			mLinearView.setOnClickListener(new OnClickListener() {
+				@Override
+				public void onClick(View v) {						
+				   if(selecionar){
+					   FormPedidoItemActivity.pedidoItem = new PedidoItem();
+					   FormPedidoItemActivity.pedidoItem.setId_produto(mLinearView.getId());
+					   Intent intent = new Intent(ListProdutosActivity.this, FormPedidoItemActivity.class); 					
+					   startActivity(intent);
+					   finish();						   
+				   }else{
+					   Intent intent = new Intent(ListProdutosActivity.this, FormProdutoActivity.class); 		
+					   intent.putExtra("ID", ""+mLinearView.getId());
+					   startActivity(intent);
+					   finish();						   
+				   }		
+				}
+			});
+		}		
+	}	
+}

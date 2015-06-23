@@ -1,0 +1,10 @@
+ALTER TABLE simdata.produtos ADD COLUMN data_atual timestamp without time zone;
+ALTER TABLE simdata.produtos ALTER COLUMN data_atual SET DEFAULT now();
+UPDATE simdata.produtos SET data_atual=now();
+ALTER TABLE simdata.produtos ALTER COLUMN data_atual SET NOT NULL;
+
+ALTER TABLE simdata.prazopag ADD COLUMN data_atual timestamp without time zone;
+UPDATE simdata.prazopag SET data_atual=now();
+ALTER TABLE simdata.prazopag ALTER COLUMN data_atual SET NOT NULL;
+ALTER TABLE simdata.prazopag ALTER COLUMN data_atual SET DEFAULT now();
+

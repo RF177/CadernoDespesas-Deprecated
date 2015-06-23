@@ -1,0 +1,128 @@
+package br.com.simdata.forcavendas.dao;
+
+import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
+
+public class DataBaseHandler extends SQLiteOpenHelper {
+	    
+    private static final int    DATABASE_VERSION = 1;
+    private static final String DATABASE_NAME    = "SimDataFV";
+    
+    public DataBaseHandler(Context context) {
+    	super(context, DATABASE_NAME, null, DATABASE_VERSION);
+    }
+
+	// Creating Tables
+	public void onCreate(SQLiteDatabase db) {
+				
+		//EMPRESA
+		db.execSQL("CREATE TABLE empresas("
+				+ " id INTEGER PRIMARY KEY AUTOINCREMENT,"
+				+ " id_empresa INTEGER NOT NULL,"
+				+ " nome TEXT,"
+				+ " razao TEXT,"
+				+ " cnpj TEXT,"
+				+ " host_interno TEXT NOT NULL,"
+				+ " host_externo TEXT NOT NULL,"
+				//+ " data_atual TIMESTAMP NOT NULL,"				
+				+ " data_atual TEXT NOT NULL,"
+				+ " v_codigo INTEGER NOT NULL, "
+				+ " v_nome,"
+				+ " v_usuario TEXT NOT NULL,"
+				+ " v_senha TEXT NOT NULL); ");
+				 					
+		//CLIENTES
+		db.execSQL("CREATE TABLE clientes("
+				+ " id INTEGER PRIMARY KEY AUTOINCREMENT,"
+				+ " id_parceiro INTEGER,"
+				+ " razao TEXT NOT NULL," 
+				+ " nome TEXT NOT NULL,"
+				+ " pesso INTEGER NOT NULL,"
+				+ " cgcpf TEXT NOT NULL,"
+				+ " ddd INTEGER,"
+				+ " telef TEXT NOT NULL,"
+				+ " e_mail TEXT NOT NULL,"
+				+ " endereco TEXT NOT NULL,"
+				+ " bairro TEXT NOT NULL,"
+				+ " municipio TEXT NOT NULL,"
+				+ " uf TEXT NOT NULL,"
+				+ " cep TEXT NOT NULL,"
+				+ " obs TEXT);");
+		
+		//PRODUTOS
+		db.execSQL("CREATE TABLE produtos("
+				+ " id_produto  INTEGER PRIMARY KEY,"				
+				+ " codigo TEXT NOT NULL,"
+				+ " descricao TEXT NOT NULL," 
+				+ " unidade TEXT NOT NULL,"				
+				+ " qtdestoque REAL,"
+				+ " preco REAL);");
+		
+		//PRODUTO PRECO
+		db.execSQL("CREATE TABLE produto_preco("
+				+ " id_produto_preco INTEGER PRIMARY KEY,"
+				+ " id_produto INTEGER NOT NULL,"
+				+ " id_tipo_preco INTEGER NOT NULL,"
+				+ " descricao_tipo_preco TEXT NOT NULL,"
+				+ " vl_preco NUMERIC); ");
+		
+		//FORMA DE PAGAMENTO
+		db.execSQL("CREATE TABLE formapagtos("
+				+ " id_formapag INTEGER PRIMARY KEY,"
+				+ " id_empresa INTEGER NOT NULL,"
+				+ " ativa INTEGER NOT NULL,"
+				+ " descricao  TEXT NOT NULL); ");		
+
+		//PRAZO DE PAGAMENTO
+		db.execSQL("CREATE TABLE prazopagtos("
+				+ " id_prazopag INTEGER PRIMARY KEY,"
+				+ " id_empresa INTEGER NOT NULL,"
+				+ " ativo INTEGER NOT NULL,"
+				+ " descricao  TEXT NOT NULL); ");			
+				
+		//PRODUTOS PRECOS		
+				
+		//PEDIDOS
+		db.execSQL("CREATE TABLE pedidos("
+				+ " id INTEGER PRIMARY KEY AUTOINCREMENT,"
+				+ " id_empresa INTEGER NOT NULL,"
+				+ " numero INTEGER NOT NULL,"
+				+ " situacao TEXT NOT NULL,"							
+				+ " id_cliente INTEGER NOT NULL,"
+				+ " id_formapag INTEGER NOT NULL,"
+				+ " id_prazopag INTEGER NOT NULL,"
+				+ " dtprevi_entrega TEXT NOT NULL,"
+				+ " tipo TEXT NOT NULL,"				
+				+ " descp NUMERIC,"
+				+ " descv NUMERIC,"
+				+ " tot_ped NUMERIC,"				
+				+ " obs TEXT NOT NULL ); ");	
+		
+		//PEDIDOS ITENS
+		db.execSQL("CREATE TABLE peditens("
+				+ " id INTEGER PRIMARY KEY AUTOINCREMENT,"
+				+ " id_pedido INTEGER NOT NULL,"
+				+ " id_produto INTEGER NOT NULL,"
+				+ " qtd NUMERIC,"
+				+ " vl_unitario NUMERIC,"
+				+ " descp NUMERIC,"
+				+ " total NUMERIC ); ");
+		
+		//db.execSQL("INSERT INTO empresas(id_empresa, nome, vendedor, data_atual) VALUES (1, 'Nutricol', 6007, '2000-01-01 01:01:01') ;");	
+	}
+
+	
+	
+	
+	
+	// Upgrading database
+	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+		//Caso seja necessário mudar a estrutura da tabela
+        //deverá primeiro excluir a tabela e depois recriá-la				
+		// Drop older table if existed
+		//db.execSQL("DROP TABLE IF EXISTS " + TABLE_CONTACTS);
+		// Create tables again
+		//onCreate(db);*/
+	}
+}

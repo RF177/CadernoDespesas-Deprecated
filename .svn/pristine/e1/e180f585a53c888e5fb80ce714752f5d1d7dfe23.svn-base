@@ -1,0 +1,92 @@
+package br.com.simdata.forcavendas.dao;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import br.com.simdata.forcavendas.model.venda.FormaPagamento;
+import br.com.simdata.forcavendas.view.DadosSessao;
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.Cursor;
+import android.database.SQLException;
+import android.database.sqlite.SQLiteDatabase;
+ 
+public class FormaPagamentoDAO {
+ 
+    private SQLiteDatabase database;
+    private DataBaseHandler dbHelper;
+    
+    private long id_empresa = DadosSessao.getEmpresa().getId_empresa();
+ 
+    public FormaPagamentoDAO(Context context) {
+        dbHelper = new DataBaseHandler(context);
+    }
+ 
+    public void open() throws SQLException {
+        database = dbHelper.getWritableDatabase();
+    }
+ 
+    public void close() {
+        dbHelper.close();
+    }
+    
+    public List<FormaPagamento> ListAllEmpresa(int id_empresa) {
+        List<FormaPagamento> formaPagamentos = new ArrayList<FormaPagamento>();
+ 
+        String selectQuery = "SELECT * FROM formapag WHERE id_empresa="+id_empresa+" AND ativo = 1 ORDER BY descricao ;" ;
+        Cursor cursor = database.rawQuery(selectQuery, null);
+        cursor.moveToFirst();
+        
+        while (!cursor.isAfterLast()) {
+        	FormaPagamento formaPagamento = cursorToEntity(cursor);
+        	formaPagamentos.add(formaPagamento);
+            cursor.moveToNext();
+        }        
+        cursor.close();//Tenha certeza que você fechou o cursor
+        return formaPagamentos;    	
+    }    
+
+    public FormaPagamento getById_formapag_erp(long id_formapag_erp){
+    	FormaPagamento formaPagamento = null;
+		String selectQuery = "SELECT * FROM formapag WHERE id_formapag_erp="+id_formapag_erp+" AND id_empresa="+id_empresa;	
+    	Cursor cursor = database.rawQuery(selectQuery, null);
+    	if (cursor != null && cursor.getCount() > 0){
+    	    cursor.moveToFirst();    	    
+    	    formaPagamento = cursorToEntity(cursor);     	                	 
+    	}
+    	cursor.close();    	
+    	return formaPagamento;    	    	       	  
+    }    
+               
+    public long insert(FormaPagamento formaPagamento) { 
+        return database.insert("formapag", null, formaPagamentoToContentValues(formaPagamento));    
+    }     
+     
+    public int update(FormaPagamento formaPagamento) {     
+        return database.update("formapag", formaPagamentoToContentValues(formaPagamento),"id_formapag="+formaPagamento.getId_formapag()+" AND id_empresa="+id_empresa, null);         
+    }
+     
+    public void delete(FormaPagamento formaPagamento) {              
+        database.delete("formapag", "id_formapag="+formaPagamento.getId_formapag()+" AND id_empresa="+id_empresa, null);
+    }
+            
+	private FormaPagamento cursorToEntity(Cursor cursor) {    			
+		FormaPagamento formaPagamento = new FormaPagamento();		
+		formaPagamento.setId_formapag(cursor.getLong(0));
+		formaPagamento.setId_formapag_erp(cursor.getLong(1));
+		formaPagamento.setId_empresa(cursor.getLong(2));
+		formaPagamento.setAtivo(cursor.getInt(3));
+		formaPagamento.setDescricao(cursor.getString(4));
+        return formaPagamento;
+    }		
+	
+	private ContentValues formaPagamentoToContentValues(FormaPagamento formaPagamento) {		
+		ContentValues values = new ContentValues();
+		values.put("id_formapag", formaPagamento.getId_formapag());
+		values.put("id_formapag_erp", formaPagamento.getId_formapag_erp());				
+		values.put("id_empresa", formaPagamento.getId_empresa());				
+		values.put("ativo", formaPagamento.getAtivo());		
+		values.put("descricao", formaPagamento.getDescricao());		
+		return values;
+	}	
+}

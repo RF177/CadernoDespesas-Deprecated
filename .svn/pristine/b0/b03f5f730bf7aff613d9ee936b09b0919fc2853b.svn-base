@@ -1,0 +1,30 @@
+package br.com.simdata.forcavendas.dao;
+
+import android.content.Context;
+import android.database.SQLException;
+import android.database.sqlite.SQLiteDatabase;
+
+public class GenericDAO {
+ 
+    private SQLiteDatabase  database;
+    private DataBaseHandler dbHelper;
+ 
+    public GenericDAO(Context context) {
+        dbHelper = new DataBaseHandler(context);
+    }
+ 
+    public void open() throws SQLException {
+        database = dbHelper.getWritableDatabase();
+    }
+ 
+    public void close() {
+        dbHelper.close();
+    }
+
+    
+    public void delete(String tabela, int id) {       	
+        database.delete(tabela.equals("parceiros") ? "clientes" : tabela, "id_"+tabela+" = "+id, null);
+    }
+            
+	
+}

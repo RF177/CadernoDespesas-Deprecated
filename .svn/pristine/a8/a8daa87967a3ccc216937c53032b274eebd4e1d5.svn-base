@@ -1,0 +1,130 @@
+package br.com.simdata.forcavendas.dao;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import br.com.simdata.forcavendas.model.Empresa;
+import br.com.simdata.forcavendas.util.DataUtils;
+import android.annotation.SuppressLint;
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.Cursor;
+import android.database.SQLException;
+import android.database.sqlite.SQLiteDatabase;
+
+public class EmpresaDAO {
+ 
+    private SQLiteDatabase  database;
+    private DataBaseHandler dbHelper;
+ 
+    public EmpresaDAO(Context context) {
+        dbHelper = new DataBaseHandler(context);
+    }
+ 
+    public void open() throws SQLException {
+        database = dbHelper.getWritableDatabase();
+    }
+ 
+    public void close() {
+        dbHelper.close();
+    }
+        
+    public List<Empresa> ListAll() {
+        List<Empresa> empresas = new ArrayList<Empresa>();
+ 
+        String selectQuery = "SELECT * FROM empresas;";
+        Cursor cursor = database.rawQuery(selectQuery, null);
+        cursor.moveToFirst();
+        
+        while (!cursor.isAfterLast()) {
+        	Empresa empresa = cursorToEntity(cursor);
+        	empresas.add(empresa);
+            cursor.moveToNext();
+        }
+        
+        cursor.close();//Tenha certeza que você fechou o cursor
+        return empresas;    	
+    }   
+    
+    public long insert(Empresa empresa) {      	 
+        return database.insert("empresas", null, empresaToContentValues(empresa));    
+    }     
+     
+    public int update(Empresa empresa) {     
+        return database.update("empresas", empresaToContentValues(empresa),"id = " + empresa.getId(), null);         
+    }
+    
+    public Empresa getByid(long id){
+		String selectQuery = "SELECT * FROM empresas WHERE id="+id;	
+    	Cursor cursor = database.rawQuery(selectQuery, null);
+    	if (cursor != null)
+    	    cursor.moveToFirst();
+
+    	Empresa empresa = cursorToEntity(cursor); 
+    	cursor.close();    
+    	
+    	return empresa;
+    }
+    
+    
+    @SuppressLint("SimpleDateFormat")
+	public void updateDataAtual(long id_empresa) {       	
+    	String data = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());    	
+        database.execSQL("UPDATE empresas SET data_atual= '"+data+"' WHERE id_empresa = "+id_empresa);         
+    }
+      
+	/**
+	 * Busca data da ultima atualização
+	 * 
+	 * @param id_empresa
+	 * @return
+	 */    
+    public String getDataAtualByEmpresa(long id_empresa){
+    	Cursor cursor = database.rawQuery("SELECT data_atual FROM empresas WHERE id_empresa="+id_empresa, null);
+    	String data = "";
+    	if (cursor != null && cursor.getCount() > 0){
+    	    cursor.moveToFirst();
+    		data = cursor.getString(0);    	
+    	}    	
+    	cursor.close();   
+    	
+    	return data;
+    }
+    
+    
+    private Empresa cursorToEntity(Cursor cursor) {
+    	Empresa empresa = new Empresa();    	
+    	empresa.setId(cursor.getLong(0));
+    	empresa.setId_empresa(cursor.getLong(1));
+    	empresa.setNome(cursor.getString(2));
+    	empresa.setRazao(cursor.getString(3));
+    	empresa.setCnpj(cursor.getString(4));		
+    	empresa.setHost_interno(cursor.getString(5));
+    	empresa.setHost_externo(cursor.getString(6));
+    	empresa.setData_atual(DataUtils.getDateTimeBd(cursor.getString(7)));    	
+    	empresa.setV_codigo(cursor.getLong(8));
+    	empresa.setV_nome(cursor.getString(9));
+    	empresa.setV_usuario(cursor.getString(10));
+    	empresa.setV_senha(cursor.getString(11));    
+    	return empresa;
+    }  
+    
+    private ContentValues empresaToContentValues(Empresa empresa) {
+		ContentValues values = new ContentValues();		
+		values.put("id", empresa.getId());
+		values.put("id_empresa", empresa.getId_empresa());
+		values.put("nome", empresa.getNome());
+		values.put("razao", empresa.getRazao());
+		values.put("cnpj", empresa.getCnpj());
+		values.put("host_interno", empresa.getHost_interno());
+		values.put("host_externo", empresa.getHost_externo());
+		values.put("data_atual", DataUtils.setDateTimeBd(empresa.getData_atual()));
+		values.put("v_codigo", empresa.getV_codigo());
+		values.put("v_nome", empresa.getV_nome());
+		values.put("v_usuario", empresa.getV_usuario());
+		values.put("v_senha", empresa.getV_senha());
+		return values;
+	}	    
+}

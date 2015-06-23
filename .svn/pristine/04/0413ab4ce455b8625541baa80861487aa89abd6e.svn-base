@@ -1,0 +1,77 @@
+package br.com.simdata.forcavendas.view;
+
+import java.util.List;
+
+import br.com.simdata.forcavendas.R;
+import br.com.simdata.forcavendas.dao.EmpresaDAO;
+import br.com.simdata.forcavendas.model.Empresa;
+import android.app.Activity;
+import android.content.Intent;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Spinner;
+import android.widget.TextView;
+import android.widget.Toast;
+
+public class FormLoginActivity extends Activity {
+	
+	EditText edit_login_usuario;
+	EditText edit_login_senha;
+	TextView textViewEmpresa;
+	Spinner spinner_login_empresa;
+	EmpresaDAO empresaDAO = new EmpresaDAO(this);
+
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.form_login);
+                 
+        textViewEmpresa = (TextView) findViewById(R.id.textViewEmpresa);
+        spinner_login_empresa = (Spinner) findViewById(R.id.spinner_login_empresa);
+        edit_login_usuario = (EditText) findViewById(R.id.edit_login_usuario);
+        edit_login_senha = (EditText) findViewById(R.id.edit_cliente_codigo);
+        Button btn_login_entrar = (Button) findViewById(R.id.btn_login_entrar);        
+               
+        empresaDAO.open();        
+        List<Empresa> empresas = empresaDAO.ListAll();      
+		empresaDAO.close(); 
+
+        if (empresas.size() == 1){//apresenta somente login e seleciona a empresa        	 
+        	DadosSessao.setEmpresa(empresas.get(0));
+            textViewEmpresa.setVisibility(View.INVISIBLE); 
+            spinner_login_empresa.setVisibility(View.INVISIBLE);        	
+        }else{//apresenta todas empresas        	        
+        	spinner_login_empresa = (Spinner) findViewById(R.id.spinner_login_empresa);        	        	        	      
+			ArrayAdapter<Empresa> formaAdapter = new ArrayAdapter<Empresa>(this, R.layout.spinner_item, empresas);			
+			formaAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+			spinner_login_empresa.setAdapter(formaAdapter);        	      
+        }
+                  
+        btn_login_entrar.setOnClickListener(new View.OnClickListener() {//Botao entrar/login
+            public void onClick(View v) {     
+            	
+        		String user = edit_login_usuario.getText().toString();
+		    	String senha = edit_login_senha.getText().toString();
+		    	DadosSessao.setEmpresa(((Empresa) spinner_login_empresa.getSelectedItem()));
+		            	            					    
+		    	//Para adicionar uma nova empresa
+		    	if(user.equals("sd") && senha.equals("sd")){
+		    		DadosSessao.setEmpresa(null);
+			    	Intent i = new Intent(FormLoginActivity.this, FormEmpresaActivity.class);
+					startActivity(i);
+					finish();			
+					
+				//Valida login na empresa	
+		    	}else if(DadosSessao.getEmpresa().getV_usuario().equals(user) && DadosSessao.getEmpresa().getV_senha().equals(senha)){		    								
+			    	Intent i = new Intent(FormLoginActivity.this, MainActivity.class);
+					startActivity(i);
+					finish();
+				} else {
+					Toast.makeText(FormLoginActivity.this, "Usuário ou senha inválidos!", Toast.LENGTH_LONG).show();
+				}
+            }
+        });
+    }        
+}

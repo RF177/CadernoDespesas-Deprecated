@@ -1,0 +1,35 @@
+package br.com.simdata.forcavendas.model;
+
+public class AuditLog{
+
+	private long id_auditlog;
+	private int id;
+	private String tabela;
+	private String acao; //C (Cancelado), E (Excluido), I (Inativo)
+	
+	public long getId_auditlog() {
+		return id_auditlog;
+	}
+	public void setId_auditlog(long id_auditlog) {
+		this.id_auditlog = id_auditlog;
+	}
+	public int getId() {
+		return id;
+	}
+	public void setId(int id) {
+		this.id = id;
+	}
+	public String getTabela() {
+		return tabela;
+	}
+	public void setTabela(String tabela) {
+		this.tabela = tabela;
+	}
+	public String getAcao() {
+		return acao;
+	}
+	public void setAcao(String acao) {
+		this.acao = acao;
+	}
+	
+}

@@ -1,0 +1,73 @@
+package br.com.simdata.forcavendas.model.venda;
+
+import java.io.Serializable;
+
+public class PrazoPagamento implements Serializable {
+
+	private static final long serialVersionUID = 1L;
+	
+	private Long id_prazopag;
+	private long id_prazopag_erp;	
+	private long id_empresa;
+	private int ativo;
+	private String descricao;
+	
+	public PrazoPagamento() {
+		super();		
+	}
+
+	public PrazoPagamento(long id_prazopag, long id_prazopag_erp, long id_empresa, int ativo, String descricao) {
+		super();
+		this.id_prazopag = id_prazopag;
+		this.id_prazopag_erp = id_prazopag_erp;
+		this.id_empresa = id_empresa;
+		this.ativo = ativo;
+		this.descricao = descricao;
+	}
+
+	public Long getId_prazopag() {
+		return id_prazopag;
+	}
+
+	public void setId_prazopag(Long id_prazopag) {
+		this.id_prazopag = id_prazopag;
+	}
+
+	public long getId_empresa() {
+		return id_empresa;
+	}
+
+	public void setId_empresa(long id_empresa) {
+		this.id_empresa = id_empresa;
+	}
+
+	public int getAtivo() {
+		return ativo;
+	}
+
+	public void setAtivo(int ativa) {
+		this.ativo = ativa;
+	}
+
+	public String getDescricao() {
+		return descricao;
+	}
+
+	public void setDescricao(String descricao) {
+		this.descricao = descricao;
+	}
+	
+	public long getId_prazopag_erp() {
+		return id_prazopag_erp;
+	}
+
+	public void setId_prazopag_erp(long id_prazopag_erp) {
+		this.id_prazopag_erp = id_prazopag_erp;
+	}
+
+	
+	//Aqui esta a mágica, sem este método você terá uma exceção  - http://aqueleblogdeandroid.blogspot.com.br/2011/02/utilizando-spinner-com-objetos.html
+	public String toString() {  
+		return (this.getDescricao());  
+	}  	
+}

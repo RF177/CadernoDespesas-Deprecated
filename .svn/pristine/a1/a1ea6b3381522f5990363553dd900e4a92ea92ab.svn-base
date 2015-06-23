@@ -1,0 +1,325 @@
+package br.com.simdata.forcavendas.view;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
+
+import br.com.simdata.forcavendas.R;
+import br.com.simdata.forcavendas.dao.ClienteDAO;
+import br.com.simdata.forcavendas.dao.FormaPagamentoDAO;
+import br.com.simdata.forcavendas.dao.PedidoDAO;
+import br.com.simdata.forcavendas.dao.PrazoPagamentoDAO;
+import br.com.simdata.forcavendas.model.cadastro.Cliente;
+import br.com.simdata.forcavendas.model.venda.FormaPagamento;
+import br.com.simdata.forcavendas.model.venda.Pedido;
+import br.com.simdata.forcavendas.model.venda.PrazoPagamento;
+import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.Log;
+import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Spinner;
+import android.widget.TextView;
+import android.app.Activity;
+import android.content.Intent;
+
+import java.util.Calendar;
+
+import android.app.DatePickerDialog;
+import android.app.Dialog;
+import android.widget.DatePicker;
+import android.widget.Toast;
+
+public class FormPedidoActivity extends Activity {
+		
+	public static Pedido pedido;
+	PedidoDAO pedidoDAO = new PedidoDAO(this);
+	
+	Button btn_form_pedidos_voltar, btn_form_pedido_items, btn_form_pedido_salvar;
+	EditText edit_pedido_cliente, edit_pedido_descontop, edit_pedido_descontov, edit_pedido_obs, edit_pedido_dtprevi_entrega;
+	Spinner spinner_pedido_situacao, spinner_pedido_formapagto, spinner_pedido_prazopagto, spinner_pedido_tipo;
+	TextView textView_pedido_total, textView_pedido_n_itens;
+	boolean novo = false;
+	
+	ClienteDAO clienteDAO = new ClienteDAO(this);
+	FormaPagamentoDAO formaPagamentoDAO = new FormaPagamentoDAO(this);
+	PrazoPagamentoDAO prazoPagamentoDAO = new PrazoPagamentoDAO(this);
+	
+	private int pYear;
+    private int pMonth;
+    private int pDay;	
+		
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {	
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.form_pedidos);
+
+		Intent intent = getIntent();		
+		String P_ID = intent.getStringExtra("ID");
+		if(P_ID != null){
+			novo = false;	
+			pedidoDAO.open();
+			pedido = pedidoDAO.getByid(Integer.parseInt(P_ID));			
+			pedidoDAO.close();
+			Log.v("", "### EDITAR PEDIDO ###");//TODO
+		}else{	
+			Log.v("", "### NOVO PEDIDO ###");//TODO
+			novo = true;			
+		}			
+	
+		edit_pedido_cliente = (EditText) findViewById(R.id.edit_pedido_cliente);					
+		btn_form_pedidos_voltar = (Button) findViewById(R.id.btn_form_pedido_voltar);
+		
+		btn_form_pedido_items = (Button) findViewById(R.id.btn_form_pedido_items);
+			
+		if(pedido.getItems() != null && pedido.getItems().size() > 0 ){	
+			btn_form_pedido_items.setText("Itens");
+		}
+		
+		btn_form_pedido_salvar = (Button) findViewById(R.id.btn_form_pedido_salvar);
+		textView_pedido_total = (TextView) findViewById(R.id.textView_pedido_total);
+		textView_pedido_n_itens = (TextView) findViewById(R.id.textView_pedido_n_itens);
+
+		spinner_pedido_situacao = (Spinner) findViewById(R.id.spinner_pedido_situacao);		
+		List<String> listsituacao;		
+		if(pedido.getSituacao().equals("P") || pedido.getSituacao().equals("L")){
+			listsituacao = Arrays.asList("Pendente","Liberado");
+		}else{
+			listsituacao = Arrays.asList("Transmitido","Cancelado","Entregue");
+		}							
+		ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(this,R.layout.spinner_item, listsituacao);
+		dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		spinner_pedido_situacao.setAdapter(dataAdapter);
+		
+		formaPagamentoDAO.open();
+		spinner_pedido_formapagto = (Spinner) findViewById(R.id.spinner_pedido_formapagto);								
+		ArrayAdapter<FormaPagamento> formaAdapter = new ArrayAdapter<FormaPagamento>(this, R.layout.spinner_item, formaPagamentoDAO.ListAllEmpresa(1));			
+		formaAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		spinner_pedido_formapagto.setAdapter(formaAdapter);
+		formaPagamentoDAO.close();		
+
+		prazoPagamentoDAO.open();
+		spinner_pedido_prazopagto = (Spinner) findViewById(R.id.spinner_pedido_prazopagto);		
+		ArrayAdapter<PrazoPagamento> pessoasAdapter = new ArrayAdapter<PrazoPagamento>(this, R.layout.spinner_item, prazoPagamentoDAO.ListAllEmpresa(1));						
+		pessoasAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		spinner_pedido_prazopagto.setAdapter(pessoasAdapter);
+		prazoPagamentoDAO.close();
+					
+		spinner_pedido_tipo = (Spinner) findViewById(R.id.spinner_pedido_tipo);
+		List<String> listTipo = Arrays.asList("Venda","Bonificação","Troca");				
+		ArrayAdapter<String> dataAdapter4 = new ArrayAdapter<String>(this,R.layout.spinner_item, listTipo);
+		dataAdapter4.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		spinner_pedido_tipo.setAdapter(dataAdapter4);				
+
+		edit_pedido_descontop = (EditText) findViewById(R.id.edit_pedido_descontop);
+		edit_pedido_descontov = (EditText) findViewById(R.id.edit_pedido_descontov);
+		edit_pedido_obs = (EditText) findViewById(R.id.edit_pedido_obs);
+		edit_pedido_dtprevi_entrega = (EditText) findViewById(R.id.edit_pedido_dtprevi_entrega);
+
+		 /** Get the current date */
+        final Calendar cal = Calendar.getInstance();
+        pYear = cal.get(Calendar.YEAR);
+        pMonth = cal.get(Calendar.MONTH);
+        pDay = cal.get(Calendar.DAY_OF_MONTH);        
+        updateDisplay();//Display the current date in the TextView	
+		          
+		edit_pedido_dtprevi_entrega.setOnClickListener(new View.OnClickListener() {
+			@SuppressWarnings("deprecation")
+			public void onClick(View v) {
+				showDialog(DATE_DIALOG_ID);
+			}
+		});
+					
+		btn_form_pedidos_voltar.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {
+				Intent myIntent = new Intent(FormPedidoActivity.this, ListPedidosActivity.class);
+				startActivity(myIntent);
+				finish();
+				return;
+			}
+		});
+					
+		btn_form_pedido_items.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {
+				//verifica se é o primeiro item do pedido
+				if(pedido.getItems() == null || pedido.getItems().size() == 0 ){			
+					Intent intent = new Intent(FormPedidoActivity.this, ListProdutosActivity.class);	
+					intent.putExtra("SELECIONAR", "true");	
+					startActivity(intent);
+					finish();				
+				}else{
+					Intent intent = new Intent(FormPedidoActivity.this, ListPedidoItemsActivity.class);		
+					startActivity(intent);
+					finish();
+				}
+			}
+		});		
+						
+		btn_form_pedido_salvar.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {
+				if (checkValidation()) {
+					try {
+						submitForm();
+					} catch (ParseException e) {
+						Toast.makeText(FormPedidoActivity.this, "ERRO!", Toast.LENGTH_LONG).show();
+						e.printStackTrace();
+					}
+				} else {
+					Toast.makeText(FormPedidoActivity.this, "Dados informados inválidos!", Toast.LENGTH_LONG).show();
+				}			
+			}
+		});
+
+		edit_pedido_descontop.addTextChangedListener(new TextWatcher() {					
+			public void onTextChanged(CharSequence s, int start, int before, int count) { }			
+			public void beforeTextChanged(CharSequence s, int start, int count, int after) { }						
+			public void afterTextChanged(Editable s) {		
+				pedido.setDescp(Double.parseDouble(edit_pedido_descontop.getText().toString()));			
+				edit_pedido_descontov.setText(pedido.getDescv()+"");				
+			}
+		});		
+
+		pedidoToForm(pedido);		
+	}
+	
+	@SuppressWarnings("rawtypes")
+	private void pedidoToForm(Pedido pedido){	
+		clienteDAO.open();
+		Cliente cliente = clienteDAO.getByidParceiro(pedido.getId_cliente());
+		clienteDAO.close();
+		
+		edit_pedido_cliente.setText(cliente.getRazao());			
+		
+		//Situacao do pedido
+		ArrayAdapter adapter_situacao = (ArrayAdapter) spinner_pedido_situacao.getAdapter();	
+		for (int position = 0; position < adapter_situacao.getCount(); position++){		
+			String situacao = (String) adapter_situacao.getItem(position);		
+			if(pedido.getSituacao().equals(situacao.substring(0, 1))){
+				spinner_pedido_situacao.setSelection(position);				
+				break; 
+			}
+		}
+		
+		//Forma do pagamento do pedido
+		ArrayAdapter adapter_formapagto = (ArrayAdapter) spinner_pedido_formapagto.getAdapter();		
+		for (int position = 0; position < adapter_formapagto.getCount(); position++){		
+			FormaPagamento formaPagamento = (FormaPagamento) adapter_formapagto.getItem(position);				
+			if(formaPagamento.getId_formapag() == pedido.getId_formapag()){													
+				spinner_pedido_formapagto.setSelection(position);				
+				break; 
+			}
+		}
+		
+		//Prazo de pagamento do pedido
+		ArrayAdapter adapter_prazopagto = (ArrayAdapter) spinner_pedido_prazopagto.getAdapter();		
+		for (int position = 0; position < adapter_prazopagto.getCount(); position++){		
+			PrazoPagamento prazoPagamento = (PrazoPagamento) adapter_prazopagto.getItem(position);				
+			if(prazoPagamento.getId_prazopag() == pedido.getId_prazopag()){													
+				spinner_pedido_prazopagto.setSelection(position);				
+				break; 
+			}
+		}
+				
+		//Previsao de entrega
+		//edit_pedido_dtprevi_entrega.setText(pedido.getDtprevi_entrega()+"");TODO
+		
+		//Tipo do pedido
+		ArrayAdapter adapter_tipo = (ArrayAdapter) spinner_pedido_tipo.getAdapter();		
+		for (int position = 0; position < adapter_tipo.getCount(); position++){
+			String tipo = (String) adapter_tipo.getItem(position);
+			if(pedido.getTipo() == (tipo.substring(0, 1))){
+				spinner_pedido_tipo.setSelection(position);
+				break; 
+			}
+		}		
+		
+		edit_pedido_descontop.setText(pedido.getDescp()+"");
+		edit_pedido_descontov.setText(pedido.getDescv()+"");
+		edit_pedido_obs.setText(pedido.getObs());
+		
+		textView_pedido_n_itens.setText("N° Itens: "+pedido.getNumeroItens());
+		textView_pedido_total.setText("Total do pedido: "+pedido.getTot_ped());						
+	}
+
+    private boolean checkValidation() {
+        boolean ret = true; 
+        //if (!Validation.hasText(edit_cliente_razao)) ret = false;
+        return ret;
+    }    	
+ 
+    
+    private void submitForm() throws ParseException {
+    	pedidoDAO.open();
+    	
+    	pedido.setId_empresa((long) 1);//TODO
+    	pedido.setNumero(pedidoDAO.getNextNumero(pedido.getId_empresa()));//TODO     	
+    	pedido.setSituacao(String.valueOf(spinner_pedido_situacao.getSelectedItem()).substring(0, 1));//Situacao (P-Pendente ou L-Liberada)
+    	pedido.setId_formapag(((FormaPagamento) spinner_pedido_formapagto.getSelectedItem()).getId_formapag());    	
+    	pedido.setId_prazopag(((PrazoPagamento) spinner_pedido_prazopagto.getSelectedItem()).getId_prazopag());    	    
+    	pedido.setDtprevi_entrega(new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).parse(edit_pedido_dtprevi_entrega.getText().toString()));
+    	pedido.setTipo(String.valueOf(spinner_pedido_tipo.getSelectedItem()).substring(0, 1));//Tipo (V-Venda, B-Bonificação ou T-Troca)    	
+    	pedido.setDescp(Double.parseDouble(edit_pedido_descontop.getText().toString()));//Desconto em porcentagem
+    	pedido.setDescp(Double.parseDouble(edit_pedido_descontov.getText().toString()));//Desconto em valor    	
+    	pedido.setObs(edit_pedido_obs.getText().toString());    	
+    	
+    	pedido.setTot_ped(pedido.CalculaTot_ped());//TODO
+    	
+    	if(pedido.getId() == null){
+    		pedidoDAO.insert(pedido);
+    	}else{
+    		pedidoDAO.update(pedido);
+    	}
+    	pedidoDAO.close();
+		    	  
+    	Intent i = new Intent(FormPedidoActivity.this, ListPedidosActivity.class);
+		startActivity(i);
+		finish();
+    }  	
+	
+
+	//############DATA
+	//http://www.botskool.com/geeks/how-create-date-picker-dialog-selecting-date-android	
+	/** This integer will uniquely define the dialog to be used for displaying date picker.*/
+    static final int DATE_DIALOG_ID = 0;
+     
+    /** Callback received when the user "picks" a date in the dialog */
+    private DatePickerDialog.OnDateSetListener pDateSetListener =
+            new DatePickerDialog.OnDateSetListener() {
+ 
+                public void onDateSet(DatePicker view, int year,int monthOfYear, int dayOfMonth) {
+                    pYear = year;
+                    pMonth = monthOfYear;
+                    pDay = dayOfMonth;
+                    updateDisplay();
+                    displayToast();
+                }
+            };
+     
+    /** Updates the date in the TextView */
+    private void updateDisplay() {
+    	// Month is 0 based so add 1
+    	edit_pedido_dtprevi_entrega.setText(new StringBuilder().append(pMonth + 1).append("/").append(pDay).append("/").append(pYear).append(" "));
+    }
+     
+	/** Displays a notification when the date is updated */
+	private void displayToast() {
+		//Toast.makeText(this, new StringBuilder().append("Date choosen is ").append(edit_pedido_dtprevi_entrega.getText()), Toast.LENGTH_SHORT).show();
+
+	}
+    
+	/** Create a new dialog for date picker */
+	@Override
+	protected Dialog onCreateDialog(int id) {
+		switch (id) {
+		case DATE_DIALOG_ID:
+			return new DatePickerDialog(this, pDateSetListener, pYear, pMonth, pDay);
+		}
+		return null;
+	} 	
+	//############DATA
+}

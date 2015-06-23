@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#e0dfdf" >
+
+    <TextView
+        android:id="@+id/textView1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="10dp"
+        android:gravity="center_horizontal"
+        android:text="@string/rf17corp"
+        android:textColor="#4283de"
+        android:textSize="20sp"
+        android:textStyle="bold" />
+
+    <ImageView
+        android:id="@+id/imgLogo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_marginLeft="5dp"
+        android:layout_marginRight="5dp"
+        android:layout_marginTop="99dp"
+        android:contentDescription="@string/rf17corp"
+        android:src="@drawable/logo" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/imgLogo"
+        android:layout_centerHorizontal="true"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:layout_marginTop="65dp" >
+
+        <EditText
+            android:id="@+id/edit_form_login_password"
+            android:layout_width="90dp"
+            android:layout_height="40dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:layout_weight="0.39"
+            android:ems="10"
+            android:inputType="textPassword"
+            android:maxWidth="90dp"
+            android:width="90dp"
+            android:hint="@string/informe_senha" />
+
+        <Button
+            android:id="@+id/btn_form_login_ok"
+            style="?android:attr/buttonStyleSmall"
+            android:layout_width="10dp"
+            android:layout_height="40dp"
+            android:layout_gravity="center"
+            android:layout_weight="0.35"
+            android:background="@color/blue"
+            android:height="40dp"
+            android:maxWidth="10dp"
+            android:text="@string/ok"
+            android:textColor="#FFFFFF"
+            android:width="10dp" />
+
+    </LinearLayout>
+
+</RelativeLayout>

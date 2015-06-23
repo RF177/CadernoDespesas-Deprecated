@@ -1,0 +1,43 @@
+package br.com.simdata.forcavendas.model;
+
+public class AtualizacaoRegistros{
+
+	private long id_atualizacaoregistros;
+	private int id_registro;
+	private String tabela;
+	private String processo; //C (Cancelado), E (Excluido), I (Inativo)
+	
+	
+	public long getId_atualizacaoregistros() {
+		return id_atualizacaoregistros;
+	}
+
+	public void setId_atualizacaoregistros(long id_atualizacaoregistros) {
+		this.id_atualizacaoregistros = id_atualizacaoregistros;
+	}
+
+	public int getId_registro() {
+		return id_registro;
+	}
+
+	public void setId_registro(int id_registro) {
+		this.id_registro = id_registro;
+	}
+
+	public String getTabela() {
+		return tabela;
+	}
+
+	public void setTabela(String tabela) {
+		this.tabela = tabela;
+	}
+
+	public String getProcesso() {
+		return processo;
+	}
+
+	public void setProcesso(String processo) {
+		this.processo = processo;
+	}
+
+}

@@ -1,0 +1,131 @@
+package br.com.simdata.forcavendas.model;
+
+import java.util.Date;
+
+public class Empresa {
+
+	private Long id;//id_local_sequencial
+	private Long id_empresa;//id e dados da empresa no webservice
+	private String nome;
+	private String razao;
+	private String cnpj;		
+	private String host_interno;
+	private String host_externo;
+	private Date   data_atual;
+			
+	private Long v_codigo;//id_parceiro
+	private String v_nome;
+	private String v_usuario;
+	private String v_senha;
+	
+	private long numeroped_inicial;//Numero inicial dos pedidos
+
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public Long getId_empresa() {
+		return id_empresa;
+	}
+
+	public void setId_empresa(Long id_empresa) {
+		this.id_empresa = id_empresa;
+	}
+
+	public String getNome() {
+		return nome;
+	}
+
+	public void setNome(String nome) {
+		this.nome = nome;
+	}
+
+	public String getRazao() {
+		return razao;
+	}
+
+	public void setRazao(String razao) {
+		this.razao = razao;
+	}
+
+	public String getCnpj() {
+		return cnpj;
+	}
+
+	public void setCnpj(String cnpj) {
+		this.cnpj = cnpj;
+	}
+
+	public String getHost_interno() {
+		return host_interno;
+	}
+
+	public void setHost_interno(String host_interno) {
+		this.host_interno = host_interno;
+	}
+
+	public String getHost_externo() {
+		return host_externo;
+	}
+
+	public void setHost_externo(String host_externo) {
+		this.host_externo = host_externo;
+	}
+
+	public Date getData_atual() {
+		return data_atual;
+	}
+
+	public void setData_atual(Date data_atual) {
+		this.data_atual = data_atual;
+	}
+
+	public Long getV_codigo() {
+		return v_codigo;
+	}
+
+	public void setV_codigo(Long v_codigo) {
+		this.v_codigo = v_codigo;
+	}
+
+	public String getV_nome() {
+		return v_nome;
+	}
+
+	public void setV_nome(String v_nome) {
+		this.v_nome = v_nome;
+	}
+
+	public String getV_usuario() {
+		return v_usuario;
+	}
+
+	public void setV_usuario(String v_usuario) {
+		this.v_usuario = v_usuario;
+	}
+
+	public String getV_senha() {
+		return v_senha;
+	}
+
+	public void setV_senha(String v_senha) {
+		this.v_senha = v_senha;
+	}
+
+	public String toString() {
+		return nome;
+	}
+
+	public long getNumeroped_inicial() {
+		return numeroped_inicial;
+	}
+
+	public void setNumeroped_inicial(long numeroped_inicial) {
+		this.numeroped_inicial = numeroped_inicial;
+	}	
+	
+}

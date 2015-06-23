@@ -1,0 +1,148 @@
+package br.com.simdata.forcavendas.model.cadastro;
+
+import java.io.Serializable;
+
+public class Cliente implements Serializable {
+
+	private static final long serialVersionUID = 1L;
+
+	private Long id;
+	
+	private Long id_parceiro;
+
+	private String razao;
+	
+	private String nome;//fantazia
+	
+	private int pesso;
+
+	private String cgcpf;
+
+	private Integer ddd;	
+
+	private String telef;
+	
+	private String e_mail;
+		
+	private String endereco;
+	
+	private String bairro;
+	
+	//private Long id_municipio;
+	
+	private String cep;
+	
+	private String obs;
+
+
+	public Cliente() {
+		super();		
+	}
+
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public Long getId_parceiro() {
+		return id_parceiro;
+	}
+
+	public void setId_parceiro(Long id_parceiro) {
+		this.id_parceiro = id_parceiro;
+	}
+
+	public String getRazao() {
+		return razao;
+	}
+
+	public void setRazao(String razao) {
+		this.razao = razao;
+	}
+
+	public String getNome() {
+		return nome;
+	}
+
+
+	public void setNome(String nome) {
+		this.nome = nome;
+	}
+
+	public int getPesso() {
+		return pesso;
+	}
+
+	public void setPesso(int pesso) {
+		this.pesso = pesso;
+	}
+
+	public String getCgcpf() {
+		return cgcpf;
+	}
+
+	public void setCgcpf(String cgcpf) {
+		this.cgcpf = cgcpf;
+	}
+
+	public Integer getDdd() {
+		return ddd;
+	}
+
+	public void setDdd(Integer ddd) {
+		this.ddd = ddd;
+	}
+
+	public String getTelef() {
+		return telef;
+	}
+
+	public void setTelef(String telef) {
+		this.telef = telef;
+	}
+
+	public String getE_mail() {
+		return e_mail;
+	}
+
+	public void setE_mail(String e_mail) {
+		this.e_mail = e_mail;
+	}
+
+	public String getEndereco() {
+		return endereco;
+	}
+
+	public void setEndereco(String endereco) {
+		this.endereco = endereco;
+	}
+
+	public String getBairro() {
+		return bairro;
+	}
+
+	public void setBairro(String bairro) {
+		this.bairro = bairro;
+	}
+
+
+
+	public String getCep() {
+		return cep;
+	}
+
+	public void setCep(String cep) {
+		this.cep = cep;
+	}
+
+	public String getObs() {
+		return obs;
+	}
+
+	public void setObs(String obs) {
+		this.obs = obs;
+	}
+}

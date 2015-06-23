@@ -1,0 +1,288 @@
+package br.com.simdata.forcavendas.dao;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import br.com.simdata.forcavendas.model.venda.Pedido;
+import br.com.simdata.forcavendas.model.venda.PedidoItem;
+import br.com.simdata.forcavendas.util.DataUtils;
+import br.com.simdata.forcavendas.util.StringFunctions;
+import br.com.simdata.forcavendas.view.DadosSessao;
+import android.annotation.SuppressLint;
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.Cursor;
+import android.database.SQLException;
+import android.database.sqlite.SQLiteDatabase;
+ 
+public class PedidoDAO {
+ 
+    private SQLiteDatabase database;
+    private DataBaseHandler dbHelper;
+    
+    public PedidoDAO(Context context) {
+	    dbHelper = new DataBaseHandler(context);
+	}
+
+	private long id_empresa = DadosSessao.getEmpresa().getId_empresa();
+ 
+    public void open() throws SQLException {
+        database = dbHelper.getWritableDatabase();
+    }
+ 
+    public void close() {
+        dbHelper.close();
+    }
+    
+    @SuppressLint("SimpleDateFormat")
+	public List<Pedido> ListAll(String filtro, String situacao, Date dt_ini, Date dt_fim) {
+        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+		String where = "";		
+		String limit = "";
+        
+        if(dt_ini != null && dt_fim != null){//Se data/periodo for informado
+			where += " AND (a.data >= '"+df.format(dt_ini)+"' AND a.data <= '"+df.format(dt_fim)+"') ";
+		}else{//Se data/periodo nao for informado, limita a pesquisa para 25 resultados
+			limit += " LIMIT 50 ";
+		}
+        
+        if(filtro != null && !filtro.equals("")){
+			if(StringFunctions.isInteger(filtro)){//verifica se eh numerico e verifica pelo numero do pedido
+				where += " AND a.numero = "+filtro+" ";
+			}else{//Verifica pela razao (nome do cliente)
+				where += " AND b.razao LIKE '%"+StringFunctions.clearAccents(filtro.toUpperCase())+"%' ";
+			}	
+		}
+        
+        String selectQuery = "SELECT * "
+        				   + "FROM pedidos a "
+        				   + "LEFT OUTER JOIN clientes b ON b.id_cliente_erp = a.id_cliente AND b.id_empresa = "+id_empresa+" "
+        				   + "WHERE situacao = '"+situacao+"' AND a.id_empresa="+id_empresa+" "+where+" ORDER BY a.numero DESC "+limit;
+        
+        List<Pedido> pedidos = new ArrayList<Pedido>();
+        Cursor cursor = database.rawQuery(selectQuery, null);
+        cursor.moveToFirst();
+        while (!cursor.isAfterLast()) {
+        	Pedido pedido = pedidoCursorToEntity(cursor);
+        	pedidos.add(pedido);
+            cursor.moveToNext();
+        }
+        
+        cursor.close();//Tenha certeza que você fechou o cursor
+        return pedidos;    	
+    } 
+    
+    /**
+     * Lista pedidos com uma situacao especifica
+     * (utilizado para sincronizar pedidos já emitidos)
+     * 
+     * @param situacao
+     * @return
+     */
+    public List<Pedido> ListPedidosSituação(char situacao) {
+        List<Pedido> pedidos = new ArrayList<Pedido>();
+        
+        String selectQuery = "SELECT * FROM pedidos WHERE situacao='"+situacao+"' AND id_empresa="+id_empresa+" ORDER BY numero";
+        
+        Cursor cursor = database.rawQuery(selectQuery, null);
+        cursor.moveToFirst();
+        
+        while (!cursor.isAfterLast()) {
+        	Pedido pedido = pedidoCursorToEntity(cursor);
+        	pedidos.add(pedido);
+            cursor.moveToNext();
+        }
+        
+        cursor.close();//Tenha certeza que você fechou o cursor
+        return pedidos;    	
+    }  
+    
+    public Pedido getByid(int id){
+		String selectQuery = "SELECT * FROM pedidos WHERE id_pedido="+id+" AND id_empresa="+id_empresa;	
+    	Cursor cursor = database.rawQuery(selectQuery, null);
+    	if (cursor != null)
+    	    cursor.moveToFirst();
+
+    	Pedido pedido = pedidoCursorToEntity(cursor); 
+    	cursor.close();    
+
+    	pedido.setItems(getItensByidPedido(id));//Busca itens
+    	
+    	return pedido;
+    }
+    
+    public Pedido getByNumero(long numero_fv){
+    	Pedido pedido = null;
+    	String selectQuery = "SELECT * FROM pedidos WHERE numero="+numero_fv+" AND id_empresa="+id_empresa;
+		Cursor cursor = database.rawQuery(selectQuery, null);
+    	if (cursor != null){
+    	    cursor.moveToFirst();
+    	}
+    	
+    	if(cursor.getCount() != 0){
+    		pedido = pedidoCursorToEntity(cursor);
+    	}
+    	
+    	cursor.close(); 
+    	return pedido;
+    }
+    
+    public List<PedidoItem> getItensByidPedido(int id_pedido){
+    	List<PedidoItem> items = new ArrayList<PedidoItem>();
+		String selectQuery = "SELECT * FROM peditens WHERE id_pedido ="+id_pedido+" AND id_empresa="+id_empresa;	
+    	Cursor cursor = database.rawQuery(selectQuery, null);    	
+    	if (cursor != null && cursor.getCount() > 0){    	
+    		cursor.moveToFirst();    	
+	    	while (!cursor.isAfterLast()) {	    		   
+	    		items.add(itensCursorToEntity(cursor));
+	            cursor.moveToNext();
+	        }
+    	}
+    	
+    	cursor.close();     	
+    	return items;    	    	       	  
+    }
+    
+    /**
+     * Busca ultimo pedido deste cliente
+     * *Utilizado para quando criar um novo pedido, ele pegar a forma e prazo de pagto feitos no ultimo pedido
+     */
+    public Pedido getUltimoPedidoCliente(long id_cliente) {     	    
+    	Pedido ultimoPedido = null;
+		String selectQuery = "SELECT * FROM pedidos WHERE id_cliente ="+id_cliente+" AND id_empresa="+id_empresa+" ORDER BY numero, id_empresa LIMIT 1";	
+    	Cursor cursor = database.rawQuery(selectQuery, null);    	
+    	if (cursor != null && cursor.getCount() > 0){    	
+    		cursor.moveToFirst();    	
+	    	while (!cursor.isAfterLast()) {	 
+	    		ultimoPedido = pedidoCursorToEntity(cursor);
+	    		cursor.moveToNext();
+	        }
+    	}
+    	
+    	cursor.close();     	
+    	return ultimoPedido;         	              	       
+    }
+      
+    
+    public long insert(Pedido pedido) {      	 
+    	return database.insert("pedidos", null, pedidoToContentValues(pedido));    	
+    }    
+    
+    public void update(Pedido pedido) {     
+    	database.update("pedidos", pedidoToContentValues(pedido), "id_pedido="+pedido.getId_pedido()+" AND id_empresa="+id_empresa, null);         	
+    }
+    
+    public void delete(Pedido pedido) {              
+        database.delete("pedidos", "id_pedido="+pedido.getId_pedido()+" AND id_empresa="+id_empresa, null);
+    }
+    
+    
+    
+    public long insertItem(PedidoItem item, long id_pedido) {      	 
+		item.setId_pedido(id_pedido);
+		return database.insert("peditens", null, itensToContentValues(item));
+    }
+    
+    public void updateItem(PedidoItem item) {     
+    	database.update("peditens", itensToContentValues(item), "id_peditem="+item.getId_peditem()+" AND id_empresa="+id_empresa, null);
+    }
+
+    public void deleteItem(PedidoItem item) {              
+        database.delete("peditens", "id_peditem="+item.getId_peditem()+" AND id_empresa="+id_empresa, null);
+    }
+    
+        
+    public long getNextNumero(long id_empresa){
+    	String selectQuery = "SELECT max(numero)+1 FROM pedidos WHERE id_empresa= "+id_empresa;
+    	Cursor cursor = database.rawQuery(selectQuery, null);
+    	if (cursor != null){
+    	    cursor.moveToFirst();
+    	}
+    	
+    	long id = cursor.getLong(0); 
+    	cursor.close();  
+    	
+    	if(id == 0){//Se for o primeiro pedido no android, pega o numero_fv do sistema simdata
+    		selectQuery = "SELECT (numeroped_inicial)+1 FROM empresa WHERE id_empresa="+id_empresa;	
+    		cursor = database.rawQuery(selectQuery, null);
+	    	if (cursor != null){
+	    		cursor.moveToFirst();
+	    	}
+	    	
+	    	id = cursor.getLong(0); 
+	    	cursor.close();
+    	}
+    	
+    	return id;
+    }
+          
+    
+	private Pedido pedidoCursorToEntity(Cursor cursor) {    			
+		Pedido pedido = new Pedido();	
+		pedido.setId_pedido(cursor.getLong(0));
+		pedido.setId_empresa(cursor.getLong(1));
+		pedido.setNumero(cursor.getLong(2));
+		pedido.setSituacao(cursor.getString(3)); 	
+		pedido.setId_cliente(cursor.getLong(4));
+		pedido.setId_formapag(cursor.getLong(5));
+		pedido.setId_prazopag(cursor.getLong(6));					
+		pedido.setData(DataUtils.getDateBd(cursor.getString(7)));
+		pedido.setDt_emissao(cursor.getString(8) == null ? null : (DataUtils.getDateBd(cursor.getString(8))) );
+		pedido.setDt_transmissao(cursor.getString(9) == null ? null : (DataUtils.getDateBd(cursor.getString(9))) );		
+		pedido.setDtprevi_entrega(DataUtils.getDateBd(cursor.getString(10)));	
+		pedido.setTipo(cursor.getString(11));
+		pedido.setDescp(cursor.getDouble(12));
+		pedido.setDescv(cursor.getDouble(13));
+		pedido.setTot_ped(cursor.getDouble(14));
+		pedido.setObs(cursor.getString(15));
+        return pedido;
+    }
+		
+	private ContentValues pedidoToContentValues(Pedido pedido) {
+		ContentValues values = new ContentValues();				
+		values.put("id_pedido",pedido.getId_pedido());
+		values.put("id_empresa",pedido.getId_empresa());
+		values.put("numero",pedido.getNumero());
+		values.put("situacao",pedido.getSituacao());
+		values.put("id_cliente",pedido.getId_cliente());
+		values.put("id_formapag",pedido.getId_formapag());
+		values.put("id_prazopag",pedido.getId_prazopag());		
+		values.put("data",DataUtils.setDateBd(pedido.getData()));
+		if(pedido.getDt_emissao() != null){values.put("dt_emissao",DataUtils.setDateBd(pedido.getDt_emissao()));}
+		if(pedido.getDt_transmissao() != null){values.put("dt_transmissao",DataUtils.setDateBd(pedido.getDt_transmissao()));}
+		values.put("dtprevi_entrega",DataUtils.setDateBd(pedido.getDtprevi_entrega()));
+		values.put("tipo",pedido.getTipo());
+		values.put("descp",pedido.getDescp());
+		values.put("descv",pedido.getDescv());
+		values.put("tot_ped",pedido.getTot_ped());
+		values.put("obs",pedido.getObs());		
+		return values;
+	}	
+		
+	private PedidoItem itensCursorToEntity(Cursor cursor) {
+		PedidoItem item = new PedidoItem();
+		item.setId_peditem(cursor.getLong(0));
+		item.setId_empresa(cursor.getLong(1));
+		item.setId_pedido(cursor.getLong(2));		
+		item.setId_produto(cursor.getLong(3));
+		item.setQtd(cursor.getDouble(4));
+		item.setVl_unitario(cursor.getDouble(5));
+		item.setDescp(cursor.getDouble(6));
+		item.setTotal(cursor.getDouble(7));		
+		return item;		
+    }
+	
+	private ContentValues itensToContentValues(PedidoItem item) {
+		ContentValues values = new ContentValues();				
+		values.put("id_peditem",item.getId_peditem());
+		values.put("id_empresa",item.getId_empresa());
+		values.put("id_pedido",item.getId_pedido());		
+		values.put("id_produto",item.getId_produto());
+		values.put("qtd",item.getQtd());
+		values.put("vl_unitario",item.getVl_unitario());
+		values.put("descp",item.getDescp());
+		values.put("total",item.getTotal());						
+		return values;
+	}
+}

@@ -1,0 +1,113 @@
+package br.com.simdata.forcavendas.view;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+
+import br.com.simdata.forcavendas.R;
+import br.com.simdata.forcavendas.dao.ContaReceberDAO;
+import br.com.simdata.forcavendas.model.cadastro.ContaReceber;
+import br.com.simdata.forcavendas.util.DataUtils;
+import br.com.simdata.forcavendas.util.StringFunctions;
+import android.os.Bundle;
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+
+public class ListClientesTitulosActivity extends Activity {
+	
+	private ContaReceberDAO contaReceberDAO = new ContaReceberDAO(this);
+	private List<ContaReceber> contaRecebers;
+	
+    private LinearLayout linear_listview_clientes;			
+	private Button btn_list_clientes_voltar;	
+	private EditText edit_cliente_titulos_total;
+	
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.list_titulos);		
+		
+		linear_listview_clientes = (LinearLayout) findViewById(R.id.linear_listview_clientes);		
+		btn_list_clientes_voltar = (Button) findViewById(R.id.btn_list_clientes_voltar);
+		edit_cliente_titulos_total = (EditText) findViewById(R.id.edit_cliente_titulos_total);
+		
+		final String id_cliente = getIntent().getStringExtra("ID");			
+		btn_list_clientes_voltar.setOnClickListener(new View.OnClickListener() {//Botao voltar
+			public void onClick(View v) {
+				Intent myIntent = new Intent(ListClientesTitulosActivity.this, FormClienteActivity.class);	
+				myIntent.putExtra("ID", id_cliente);//Passa id do cliente
+				startActivity(myIntent);
+				finish();
+				return;
+			}
+		});	
+		
+		filtrar(id_cliente);						
+	}
+	
+    public void onBackPressed() {//Botao de voltar do android
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);   	 
+    	builder.setTitle("SimData");
+    	builder.setMessage("Você tem certeza que deseja sair do sistema?");
+    	     	 
+    	builder.setPositiveButton("Sim", new DialogInterface.OnClickListener() {    	
+    	    public void onClick(DialogInterface dialog, int which) {// Code that is executed when clicking YES    	        
+    	        dialog.dismiss();//Fecha dialog
+    	        sair();//Sai do app
+    	    }    	 
+    	});    	     	 
+    	builder.setNegativeButton("Não", new DialogInterface.OnClickListener() {
+    		public void onClick(DialogInterface dialog, int which) {// Code that is executed when clicking NO
+    			dialog.dismiss();//Fecha dialog
+    	    }    	 
+    	});
+        
+        AlertDialog alert = builder.create();
+    	alert.show();//Mostra dialog        
+    }	
+	public void sair(){//Sai do aplicativo
+		super.onBackPressed();//Executa metodo nativo do botao voltar do android
+	}
+	
+	public void filtrar(String id_cliente){	
+		linear_listview_clientes.removeAllViews();//Remove a lista antiga, para criar novamente
+		
+		contaReceberDAO.open();
+		contaRecebers = contaReceberDAO.ListAllbyId_cliente(Integer.parseInt(id_cliente));
+		contaReceberDAO.close();
+		
+		double total = 0.0;
+		
+		for (ContaReceber ctr : contaRecebers) {
+			LayoutInflater inflater  = (LayoutInflater) getApplicationContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+			final View mLinearView = inflater.inflate(R.layout.list_titulos_row, null);
+			
+			TextView edit_list_cliente_titulos_row_numero = (TextView) mLinearView.findViewById(R.id.edit_list_cliente_titulos_row_numero);
+			TextView edit_list_cliente_titulos_row_vecto = (TextView) mLinearView.findViewById(R.id.edit_list_cliente_titulos_row_vecto);
+			TextView edit_list_cliente_titulos_row_dias = (TextView) mLinearView.findViewById(R.id.edit_list_cliente_titulos_row_dias);
+			TextView edit_list_cliente_titulos_row_saldo = (TextView) mLinearView.findViewById(R.id.edit_list_cliente_titulos_row_saldo);	
+			
+			edit_list_cliente_titulos_row_numero.setText("Número: "+ctr.getNumero());
+			edit_list_cliente_titulos_row_vecto.setText("Vencimento: "+ new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(ctr.getVecto()));
+			edit_list_cliente_titulos_row_dias.setText("Dias: "+DataUtils.intervaloDias(ctr.getVecto(), new Date()));//TODO
+			edit_list_cliente_titulos_row_saldo.setText("Saldo: "+StringFunctions.getDoubleFormatado(ctr.getSaldo()));
+			
+			total += ctr.getSaldo();
+			
+			edit_cliente_titulos_total.setText(StringFunctions.getDoubleFormatado(total));
+						
+			linear_listview_clientes.addView(mLinearView);
+		}
+	}
+		
+}

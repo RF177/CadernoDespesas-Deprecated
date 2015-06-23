@@ -1,0 +1,39 @@
+package br.com.simdata.forcavendas.util;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
+public class DataUtils {
+	
+	public static String setDateBd(Date date) {	
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+		return dateFormat.format(date);
+	}
+		
+	public static Date getDateBd(String date) {
+		try {
+		    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());		
+			return dateFormat.parse(date);
+		} catch (ParseException e) {		
+			e.printStackTrace();
+		}
+		return null;
+	}
+		
+	public static String setDateTimeBd(Date date) {	
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());//
+		return dateFormat.format(date);
+	}
+		
+	public static Date getDateTimeBd(String date) {
+		try {
+		    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());		
+			return dateFormat.parse(date);
+		} catch (ParseException e) {		
+			e.printStackTrace();
+		}
+		return null;
+	}		
+}

@@ -1,0 +1,89 @@
+package br.com.simdata.forcavendas.service;
+
+import br.com.simdata.forcavendas.model.venda.Pedido;
+import br.com.simdata.forcavendas.model.venda.PedidoItem;
+
+public class PedidoService {
+
+	/**
+	 * Verifica se o valor nao esta nulo e formatata ele para double trocando virgula por ponto
+	 * 
+	 * @param valor_original
+	 * @return Numero Formatado para double ou 0.0
+	 */
+	public static double formataVerificaValor(Object valor_original){
+		return !valor_original.toString().equals("") ? Double.parseDouble(valor_original.toString().replace(",", ".")) : 0.0;		
+	}
+	
+	/**
+	 * Calcula o valor total do item (Qtdade * Preço Unitário - Desconto(%))
+	 * 
+	 * @param item
+	 * @return valorTotalItem
+	 */
+	public static double CalculaTotalItem(PedidoItem item) {
+		return (item.getQtd() * item.getVl_unitario() - ((item.getQtd() * item.getVl_unitario()) * (item.getDescp() / 100)));			
+	}	
+	
+	/**
+	 * Calcula o valor total do pedido
+	 * 
+	 * @param pedido
+	 * @return
+	 */
+	public static double CalculaTot_ped(Pedido pedido) {
+		if(pedido.getItems() != null){
+			double tot_ped = 0.0;
+			for (PedidoItem item : pedido.getItems()) {
+				tot_ped += item.getTotal();
+			}
+			return tot_ped - pedido.getDescv();
+		}		
+		return 0.0;
+	}
+	
+	/**
+	 * Calcula o numero de itens do pedido (qtd de todos os itens)
+	 * 
+	 * @param pedido
+	 * @return
+	 */
+	public static int CalculaNumeroItensPedido(Pedido pedido) {
+		if (pedido.getItems() != null) {
+			int qtdItens = 0;
+			for (PedidoItem item : pedido.getItems()) {
+				qtdItens += item.getQtd();
+			}
+			return qtdItens;
+		}
+		return 0;
+	}
+	
+	/**
+	 * Calcula o valor do desconto pela porcentagem de desconto
+	 * 
+	 * @param descp
+	 * @param tot_ped
+	 * @return descv
+	 */
+	public static double CalculaDescontoValor(double descp, double tot_ped) {
+		if (descp == 0.0 || tot_ped == 0.0) {
+			return 0.0;
+		}
+		return tot_ped * (descp / 100);
+	}
+
+	/**
+	 * Calcula a porcentagem do desconto pelo valor do desconto
+	 * 
+	 * @param descv
+	 * @param tot_ped
+	 * @return descp
+	 */
+	public static double CalculaDescontoPorcentagem(double descv, double tot_ped) {
+		if (descv == 0.0 || tot_ped == 0.0) {
+			return 0.0;
+		}
+		return 100 / (tot_ped / descv);
+	}
+}

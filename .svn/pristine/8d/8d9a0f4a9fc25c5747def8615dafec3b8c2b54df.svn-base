@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="#CCCCCC"
+    android:gravity="top" >
+
+    <LinearLayout
+        android:id="@+id/linearLayout1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:orientation="horizontal" >
+
+        <TextView
+            android:id="@+id/textview_filtroavancado_periodo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginTop="10dp"
+            android:text="@string/filtroavancado_periodo"
+            android:textColor="#372c24" />
+
+        <EditText
+            android:id="@+id/edit_pedido_filtroavancado_dialog_data1"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:layout_marginLeft="2dp"
+            android:layout_marginRight="2dp"
+            android:layout_marginTop="10dp"
+            android:background="@layout/style_edittext"
+            android:ems="10"
+            android:focusable="false"
+            android:inputType="date" />
+
+        <TextView
+            android:id="@+id/textview_filtroavancado_ate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:layout_marginTop="10dp"
+            android:text="@string/filtroavancado_ate"
+            android:textColor="#372c24" />
+
+        <EditText
+            android:id="@+id/edit_pedido_filtroavancado_dialog_data2"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:layout_marginLeft="2dp"
+            android:layout_marginRight="10dp"
+            android:layout_marginTop="10dp"
+            android:background="@layout/style_edittext"
+            android:ems="10"
+            android:focusable="false"
+            android:inputType="date" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/linearLayout2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/linearLayout1"
+        android:layout_centerHorizontal="true" >
+
+        <Button
+            android:id="@+id/btn_filtroavancado_filtrar"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:background="@layout/style_button"
+            android:minHeight="40dp"
+            android:text="@string/filtroavancado_filtrar"
+            android:textColor="#FFFFFF" />
+
+        <Button
+            android:id="@+id/btn_filtroavancado_limpar_filtrar"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="10dp"
+            android:layout_marginTop="10dp"
+            android:background="@layout/style_button"
+            android:minHeight="40dp"
+            android:text="@string/filtroavancado_limpar_filtrar"
+            android:textColor="#FFFFFF" />
+
+    </LinearLayout>
+
+</RelativeLayout>

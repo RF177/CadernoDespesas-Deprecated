@@ -1,0 +1,50 @@
+package br.com.simdata.forcavendas.dao;
+
+import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
+
+public class DataBaseHandler extends SQLiteOpenHelper {
+	    
+    private static final int    DATABASE_VERSION = 1;
+    private static final String DATABASE_NAME    = "SimDataFV";
+    
+    public DataBaseHandler(Context context) {
+    	super(context, DATABASE_NAME, null, DATABASE_VERSION);
+    }
+
+	// Creating Tables
+	public void onCreate(SQLiteDatabase db) {
+		
+		db.execSQL("CREATE TABLE clientes("
+				+ " id INTEGER PRIMARY KEY AUTOINCREMENT,"
+				+ " id_parceiro INTEGER NOT NULL,"
+				+ " razao TEXT NOT NULL," 
+				+ " nome TEXT NOT NULL,"
+				+ " pesso INTEGER NOT NULL,"
+				+ " cgcpf TEXT NOT NULL,"
+				+ " ddd INTEGER,"
+				+ " telef TEXT NOT NULL,"
+				+ " e_mail TEXT NOT NULL,"
+				+ " endereco TEXT NOT NULL,"
+				+ " bairro TEXT NOT NULL,"
+				+ " cep TEXT NOT NULL,"
+				+ " obs TEXT);");
+		
+		//db.execSQL("INSERT INTO clientes(id_parceiro, razao, nome, pesso, cgcpf, cgcpf, ddd, telef, e_mail, endereco, bairro, cep, obs)  "
+		//		+ "VALUES (1,'Rafael Hobold Ltda', 'Rafael Hobold', 1, '05256069985', 48, '99785981', 'rafahobold@gmail.com', 'Rua Luciano Bianco - 440','Centro','88730000','');");
+		
+		
+		//db.execSQL("CREATE TABLE cfg (id_cfg INTEGER PRIMARY KEY, id_vendedor INTEGER, id_empresa  INTEGER);");
+	}
+
+	// Upgrading database
+	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+		//Caso seja necessário mudar a estrutura da tabela
+        //deverá primeiro excluir a tabela e depois recriá-la				
+		// Drop older table if existed
+		//db.execSQL("DROP TABLE IF EXISTS " + TABLE_CONTACTS);
+		// Create tables again
+		//onCreate(db);*/
+	}
+}

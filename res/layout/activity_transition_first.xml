@@ -1,0 +1,50 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MyActivity"
+    >
+
+    <View
+        android:id="@+id/activity_transition_header"
+        android:layout_width="match_parent"
+        android:layout_height="50dp" 
+        android:transitionName="holder1"
+        android:background="?android:colorPrimary"
+        />
+
+    <Button
+        android:id="@+id/fab_button"
+        android:layout_width="@dimen/fab_size"
+        android:layout_height="@dimen/fab_size"
+        android:transitionName="fab"
+
+        android:elevation="7dp"
+        android:background="@drawable/ripple_round"
+        android:stateListAnimator="@anim/fab_anim" 
+        android:onClick="onFabPressed"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:text="@string/plus"
+        android:textColor="#fff3faff"
+        android:textSize="25sp"
+        android:layout_marginRight="10dp"
+        android:layout_marginBottom="10dp" />
+
+    <ScrollView
+        android:layout_width="fill_parent"
+        android:layout_height="match_parent"
+        android:background="#fff3faff"
+        android:fillViewport="true"
+        android:layout_below="@+id/activity_transition_header">
+
+        <LinearLayout
+            android:id="@+id/linear_listview_lancamentos"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" >
+        </LinearLayout>
+    </ScrollView>
+
+
+</RelativeLayout>

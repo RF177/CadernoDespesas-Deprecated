@@ -1,0 +1,383 @@
+package br.com.simdata.forcavendas.view;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
+
+import br.com.simdata.forcavendas.R;
+import br.com.simdata.forcavendas.dao.ClienteDAO;
+import br.com.simdata.forcavendas.dao.FormaPagamentoDAO;
+import br.com.simdata.forcavendas.dao.PedidoDAO;
+import br.com.simdata.forcavendas.dao.PrazoPagamentoDAO;
+import br.com.simdata.forcavendas.model.cadastro.Cliente;
+import br.com.simdata.forcavendas.model.venda.FormaPagamento;
+import br.com.simdata.forcavendas.model.venda.Pedido;
+import br.com.simdata.forcavendas.model.venda.PedidoItem;
+import br.com.simdata.forcavendas.model.venda.PrazoPagamento;
+import br.com.simdata.forcavendas.service.PedidoService;
+import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.Log;
+import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Spinner;
+import android.widget.TextView;
+import android.app.Activity;
+import android.content.Intent;
+
+import java.util.Calendar;
+
+import android.app.DatePickerDialog;
+import android.app.Dialog;
+import android.widget.DatePicker;
+import android.widget.Toast;
+
+public class FormPedidoActivity extends Activity {
+		
+	public static Pedido pedido;
+	boolean novo = false;
+	
+	Button btn_form_pedidos_voltar, btn_form_pedido_items, btn_form_pedido_salvar, btn_form_pedido_excluir;
+	EditText edit_pedido_cliente, edit_pedido_descontop, edit_pedido_descontov, edit_pedido_obs, edit_pedido_dtprevi_entrega;
+	Spinner spinner_pedido_situacao, spinner_pedido_formapagto, spinner_pedido_prazopagto, spinner_pedido_tipo;
+	TextView textView_pedido_total, textView_pedido_n_itens;
+	
+	PedidoDAO pedidoDAO = new PedidoDAO(this);
+	ClienteDAO clienteDAO = new ClienteDAO(this);
+	FormaPagamentoDAO formaPagamentoDAO = new FormaPagamentoDAO(this);
+	PrazoPagamentoDAO prazoPagamentoDAO = new PrazoPagamentoDAO(this);
+	
+	private int pYear;
+    private int pMonth;
+    private int pDay;	
+		
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {	
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.form_pedidos);
+
+		Intent intent = getIntent();		
+		String P_ID = intent.getStringExtra("ID");
+		if(P_ID != null){//Editar Pedido
+			novo = false;	
+			pedidoDAO.open();
+			pedido = pedidoDAO.getByid(Integer.parseInt(P_ID));			
+			pedidoDAO.close();
+			Log.v("", "### EDITAR PEDIDO ###");
+		}else{//Novo pedido	
+			Log.v("", "### NOVO PEDIDO ###");
+			novo = true;			
+		}			
+	
+		edit_pedido_cliente = (EditText) findViewById(R.id.edit_pedido_cliente);					
+		btn_form_pedidos_voltar = (Button) findViewById(R.id.btn_form_pedido_voltar);
+		btn_form_pedido_items = (Button) findViewById(R.id.btn_form_pedido_items);
+		btn_form_pedido_salvar = (Button) findViewById(R.id.btn_form_pedido_salvar);
+		btn_form_pedido_excluir = (Button) findViewById(R.id.btn_form_pedido_excluir);
+		textView_pedido_total = (TextView) findViewById(R.id.textView_pedido_total);
+		textView_pedido_n_itens = (TextView) findViewById(R.id.textView_pedido_n_itens);
+		
+		if(pedido.getItems() != null && pedido.getItems().size() > 0 ){	
+			btn_form_pedido_items.setText("Itens do Pedido");
+		}
+
+		spinner_pedido_situacao = (Spinner) findViewById(R.id.spinner_pedido_situacao);		
+		List<String> listsituacao;		
+		if(pedido.getSituacao().equals("P") || pedido.getSituacao().equals("L")){
+			listsituacao = Arrays.asList("Pendente","Liberado");
+		}else{
+			listsituacao = Arrays.asList("Transmitido","Cancelado","Entregue");
+		}							
+		ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(this,R.layout.spinner_item, listsituacao);
+		dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		spinner_pedido_situacao.setAdapter(dataAdapter);
+		
+		formaPagamentoDAO.open();
+		spinner_pedido_formapagto = (Spinner) findViewById(R.id.spinner_pedido_formapagto);								
+		ArrayAdapter<FormaPagamento> formaAdapter = new ArrayAdapter<FormaPagamento>(this, R.layout.spinner_item, formaPagamentoDAO.ListAllEmpresa(1));			
+		formaAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		spinner_pedido_formapagto.setAdapter(formaAdapter);
+		formaPagamentoDAO.close();		
+
+		prazoPagamentoDAO.open();
+		spinner_pedido_prazopagto = (Spinner) findViewById(R.id.spinner_pedido_prazopagto);		
+		ArrayAdapter<PrazoPagamento> pessoasAdapter = new ArrayAdapter<PrazoPagamento>(this, R.layout.spinner_item, prazoPagamentoDAO.ListAllEmpresa(1));						
+		pessoasAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		spinner_pedido_prazopagto.setAdapter(pessoasAdapter);
+		prazoPagamentoDAO.close();
+					
+		spinner_pedido_tipo = (Spinner) findViewById(R.id.spinner_pedido_tipo);
+		List<String> listTipo = Arrays.asList("Venda","Bonificação","Troca");				
+		ArrayAdapter<String> tipoAdapter = new ArrayAdapter<String>(this,R.layout.spinner_item, listTipo);
+		tipoAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		spinner_pedido_tipo.setAdapter(tipoAdapter);				
+
+		edit_pedido_descontop = (EditText) findViewById(R.id.edit_pedido_descontop);
+		edit_pedido_descontov = (EditText) findViewById(R.id.edit_pedido_descontov);
+		edit_pedido_obs = (EditText) findViewById(R.id.edit_pedido_obs);
+		edit_pedido_dtprevi_entrega = (EditText) findViewById(R.id.edit_pedido_dtprevi_entrega);
+
+		 /** Pega a data atual */
+        final Calendar cal = Calendar.getInstance();
+        pYear = cal.get(Calendar.YEAR);
+        pMonth = cal.get(Calendar.MONTH);
+        pDay = cal.get(Calendar.DAY_OF_MONTH);        
+        updateDisplay();//Mostra a data atual no TextView	
+		          
+		edit_pedido_dtprevi_entrega.setOnClickListener(new View.OnClickListener() {//Botao previsao de entrega
+			@SuppressWarnings("deprecation")
+			public void onClick(View v) {
+				showDialog(DATE_DIALOG_ID);
+			}
+		});
+					
+		btn_form_pedidos_voltar.setOnClickListener(new View.OnClickListener() {//Botao voltar
+			public void onClick(View v) {
+				Intent myIntent = new Intent(FormPedidoActivity.this, ListPedidosActivity.class);
+				startActivity(myIntent);
+				finish();
+				return;
+			}
+		});
+					
+		btn_form_pedido_items.setOnClickListener(new View.OnClickListener() {//Botao itens
+			public void onClick(View v) {				
+				
+				try {
+					submitForm(false);
+				} catch (ParseException e) {
+					e.printStackTrace();
+				}				
+				
+				if(pedido.getItems() == null || pedido.getItems().size() == 0 ){//verifica se é o primeiro item do pedido, se for vai direto para adicionar item			
+					Intent intent = new Intent(FormPedidoActivity.this, ListProdutosActivity.class);	
+					intent.putExtra("SELECIONAR", "true");	
+					startActivity(intent);
+					finish();				
+				}else{//Vai para a lista de itens do pedido
+					Intent intent = new Intent(FormPedidoActivity.this, ListPedidoItemsActivity.class);		
+					startActivity(intent);
+					finish();
+				}
+			}
+		});		
+						
+		btn_form_pedido_salvar.setOnClickListener(new View.OnClickListener() {//Salvar pedido
+			public void onClick(View v) {				
+				try {
+					submitForm(true);
+				} catch (ParseException e) {
+					Toast.makeText(FormPedidoActivity.this, "ERRO!", Toast.LENGTH_LONG).show();
+					e.printStackTrace();
+				}				
+			}
+		});
+		
+		if(novo){
+			btn_form_pedido_excluir.setVisibility(View.INVISIBLE);//Esconde botao excluir pedido
+		}else{
+			btn_form_pedido_excluir.setOnClickListener(new View.OnClickListener() {	//Botao Excluir pedido	
+				public void onClick(View v) {
+					pedidoDAO.open();
+			    	
+					//##DELETA ITENS DO PEDIDO DO BD
+					for(PedidoItem item : pedido.getItems()){
+						pedidoDAO.deleteItem(item);
+					}
+			    	
+			    	//##DELETA PEDIDO DO BD
+			    	pedidoDAO.delete(pedido);
+					
+			    	pedidoDAO.close();
+			    	
+			    	Intent i = new Intent(FormPedidoActivity.this, ListPedidosActivity.class);
+					startActivity(i);
+					finish();
+				}			
+			});
+		}
+				
+		edit_pedido_descontop.addTextChangedListener(new TextWatcher() {//ValueChange desconto porcentagem					
+			public void onTextChanged(CharSequence s, int start, int before, int count) {}			
+			public void beforeTextChanged(CharSequence s, int start, int count, int after) {}						
+			public void afterTextChanged(Editable s) {		
+				pedido.setDescp(PedidoService.formataVerificaValor(s));		
+				pedido.setDescv(PedidoService.CalculaDescontoValor(pedido.getDescp(), pedido.getTot_ped()));
+				pedido.setTot_ped(PedidoService.CalculaTot_ped(pedido));
+				
+				edit_pedido_descontov.setText(pedido.getDescv()+"");
+				textView_pedido_total.setText("Total do pedido: "+pedido.getTot_ped());
+			}
+		});
+		
+		edit_pedido_descontov.addTextChangedListener(new TextWatcher() {//ValueChange desconto valor					
+			public void onTextChanged(CharSequence s, int start, int before, int count) {}			
+			public void beforeTextChanged(CharSequence s, int start, int count, int after) {}						
+			public void afterTextChanged(Editable s) {		
+				pedido.setDescv(PedidoService.formataVerificaValor(s));		
+				pedido.setDescp(PedidoService.CalculaDescontoPorcentagem(pedido.getDescv(), pedido.getTot_ped()));
+				pedido.setTot_ped(PedidoService.CalculaTot_ped(pedido));
+				
+				//edit_pedido_descontop.setText(pedido.getDescp()+""); TODO
+				textView_pedido_total.setText("Total do pedido: "+pedido.getTot_ped());
+			}
+		});
+
+		pedidoToForm(pedido);		
+	}
+	
+	@SuppressWarnings("rawtypes")
+	private void pedidoToForm(Pedido pedido){	
+		clienteDAO.open();
+		Cliente cliente = clienteDAO.getByidParceiro(pedido.getId_cliente());
+		clienteDAO.close();
+		
+		edit_pedido_cliente.setText(cliente.getRazao());			
+		
+		//Situacao do pedido
+		ArrayAdapter adapter_situacao = (ArrayAdapter) spinner_pedido_situacao.getAdapter();	
+		for (int position = 0; position < adapter_situacao.getCount(); position++){		
+			String situacao = (String) adapter_situacao.getItem(position);		
+			if(pedido.getSituacao().equals(situacao.substring(0, 1))){
+				spinner_pedido_situacao.setSelection(position);				
+				break; 
+			}
+		}
+		
+		//Forma do pagamento do pedido
+		ArrayAdapter adapter_formapagto = (ArrayAdapter) spinner_pedido_formapagto.getAdapter();		
+		for (int position = 0; position < adapter_formapagto.getCount(); position++){		
+			FormaPagamento formaPagamento = (FormaPagamento) adapter_formapagto.getItem(position);				
+			if(formaPagamento.getId_formapag() == pedido.getId_formapag()){													
+				spinner_pedido_formapagto.setSelection(position);				
+				break; 
+			}
+		}
+		
+		//Prazo de pagamento do pedido
+		ArrayAdapter adapter_prazopagto = (ArrayAdapter) spinner_pedido_prazopagto.getAdapter();		
+		for (int position = 0; position < adapter_prazopagto.getCount(); position++){		
+			PrazoPagamento prazoPagamento = (PrazoPagamento) adapter_prazopagto.getItem(position);				
+			if(prazoPagamento.getId_prazopag() == pedido.getId_prazopag()){													
+				spinner_pedido_prazopagto.setSelection(position);				
+				break; 
+			}
+		}
+				
+		//Previsao de entrega
+		edit_pedido_dtprevi_entrega.setText(new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(pedido.getDtprevi_entrega()));
+		
+		//Tipo do pedido
+		ArrayAdapter adapter_tipo = (ArrayAdapter) spinner_pedido_tipo.getAdapter();		
+		for (int position = 0; position < adapter_tipo.getCount(); position++){
+			String tipo = (String) adapter_tipo.getItem(position);			
+			if(tipo.substring(0, 1).equals(pedido.getTipo())){				
+				spinner_pedido_tipo.setSelection(position);
+				break; 
+			}
+		}		
+		
+		edit_pedido_descontop.setText(pedido.getDescp()+"");
+		edit_pedido_descontov.setText(pedido.getDescv()+"");
+		edit_pedido_obs.setText(pedido.getObs());
+		
+		textView_pedido_n_itens.setText("N° Itens: "+PedidoService.CalculaNumeroItensPedido(pedido));
+		textView_pedido_total.setText("Total do pedido: "+PedidoService.CalculaTot_ped(pedido));						
+	}
+ 	
+    private void submitForm(boolean salvar) throws ParseException {
+    	    	
+    	pedido.setId_empresa((long) 1);//TODO
+    	pedido.setSituacao(String.valueOf(spinner_pedido_situacao.getSelectedItem()).substring(0, 1));//Situacao (P-Pendente ou L-Liberada)
+    	pedido.setId_formapag(((FormaPagamento) spinner_pedido_formapagto.getSelectedItem()).getId_formapag());    	
+    	pedido.setId_prazopag(((PrazoPagamento) spinner_pedido_prazopagto.getSelectedItem()).getId_prazopag());    	    
+    	pedido.setDtprevi_entrega(new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).parse(edit_pedido_dtprevi_entrega.getText().toString()));
+    	pedido.setTipo(String.valueOf(spinner_pedido_tipo.getSelectedItem()).substring(0, 1));//Tipo (V-Venda, B-Bonificação ou T-Troca)    	
+    	pedido.setDescp(Double.parseDouble(edit_pedido_descontop.getText().toString()));//Desconto em porcentagem
+    	pedido.setDescp(Double.parseDouble(edit_pedido_descontov.getText().toString()));//Desconto em valor    	
+    	pedido.setObs(edit_pedido_obs.getText().toString());    	    	
+    	pedido.setTot_ped(PedidoService.CalculaTot_ped(pedido));
+    	
+    	if(salvar){
+	    	if(pedido.getTot_ped() == 0.0){
+				Toast.makeText(FormPedidoActivity.this, "Total do pedido igual a zero (0,00), não foi possível salvar o pedido!", Toast.LENGTH_LONG).show();
+			}else{
+				pedidoDAO.open();
+				
+		    	if(pedido.getId() == null){
+		    		pedido.setNumero(pedidoDAO.getNextNumero(pedido.getId_empresa()));   	
+		    	}
+		    	
+		    	//##SALVA PEDIDO NO BD
+		    	if(pedido.getId() == null){
+		    		pedido.setId(pedidoDAO.insert(pedido));//Novo pedido
+		    	}else{
+		    		pedidoDAO.update(pedido);//Atualiza pedido
+		    	}
+		    	//##SALVA PEDIDO NO BD
+		    	
+		    	//##DELETA ITENS EXCLUIDOS
+		    	if(FormPedidoItemActivity.itemsRemovidos != null && FormPedidoItemActivity.itemsRemovidos.size() > 0){//Verifica se existe itens para excluir
+		    		for(PedidoItem itemExcluir : FormPedidoItemActivity.itemsRemovidos){
+		    			pedidoDAO.deleteItem(itemExcluir);
+		    		}
+		    		FormPedidoItemActivity.itemsRemovidos = null;//Limpa a lista depois de excluir itens
+		    	}
+		    	//##DELETA ITENS EXCLUIDOS
+		    	
+		    	//##SALVA ITENS NO BD
+		    	for(PedidoItem item : pedido.getItems()){
+		    		if(item.getId() == null){
+		    			item.setId(pedidoDAO.insertItem(item, pedido.getId())); //Insere novo item    			
+		    		}else{
+		    			pedidoDAO.updateItem(item); //Atualiza item   	
+		    		}
+		    	}
+		    	//##SALVA ITENS NO BD
+		    	
+		    	pedidoDAO.close();
+				    	  
+		    	Intent i = new Intent(FormPedidoActivity.this, ListPedidosActivity.class);
+				startActivity(i);
+				finish();
+			}
+    	}
+    }  	
+	
+
+	//##DATA##
+	//http://www.botskool.com/geeks/how-create-date-picker-dialog-selecting-date-android	
+	/** Este inteiro vai definir com exclusividade o diálogo a ser utilizado para a exibição do selecionador de data.*/
+    static final int DATE_DIALOG_ID = 0;
+     
+    /** 'Callback' recebida quando o usuário "pega" uma data na caixa de diálogo */
+    private DatePickerDialog.OnDateSetListener pDateSetListener = new DatePickerDialog.OnDateSetListener() {
+    	public void onDateSet(DatePicker view, int year,int monthOfYear, int dayOfMonth) {
+    		pYear = year;
+            pMonth = monthOfYear;
+            pDay = dayOfMonth;
+            updateDisplay();            
+        }
+    };
+     
+    /** Atualiza a data no TextView */
+    private void updateDisplay() {
+    	edit_pedido_dtprevi_entrega.setText(new StringBuilder().append(pDay).append("/").append(pMonth + 1).append("/").append(pYear).append(" "));
+    }
+    
+	/** Cria novo dialog para selecionar a data */
+	@Override
+	protected Dialog onCreateDialog(int id) {
+		switch (id) {
+		case DATE_DIALOG_ID:
+			return new DatePickerDialog(this, pDateSetListener, pYear, pMonth, pDay);
+		}
+		return null;
+	} 	
+	//##DATA##
+}

@@ -1,0 +1,73 @@
+package br.com.simdata.forcavendas.dao;
+
+import br.com.simdata.forcavendas.model.cadastro.ProdutoEstoque;
+import br.com.simdata.forcavendas.view.DadosSessao;
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.Cursor;
+import android.database.SQLException;
+import android.database.sqlite.SQLiteDatabase;
+ 
+public class ProdutoEstoqueDAO {
+ 
+    private SQLiteDatabase database;
+    private DataBaseHandler dbHelper;
+    
+    private long id_empresa = DadosSessao.getEmpresa().getId_empresa();
+ 
+    public ProdutoEstoqueDAO(Context context) {
+        dbHelper = new DataBaseHandler(context);
+    }
+ 
+    public void open() throws SQLException {
+        database = dbHelper.getWritableDatabase();
+    }
+ 
+    public void close() {
+        dbHelper.close();
+    }
+    
+    public ProdutoEstoque getById_produto(long id_produto){
+    	ProdutoEstoque produtoEstoque = null;
+		String selectQuery = "SELECT * FROM produto_estoque WHERE id_produto="+id_produto+" AND id_empresa="+id_empresa;	
+    	Cursor cursor = database.rawQuery(selectQuery, null);
+    	if (cursor != null && cursor.getCount() > 0){
+    	    cursor.moveToFirst();    	    
+    	    produtoEstoque = cursorToEntity(cursor);     	                	 
+    	}
+    	cursor.close();    	
+    	return produtoEstoque;    	    	       	  
+    }  
+                  
+    public long insert(ProdutoEstoque produtoEstoque) {      	 
+        return database.insert("produto_estoque", null, ProdutoEstoqueToContentValues(produtoEstoque));    
+    }     
+     
+    public int update(ProdutoEstoque produtoEstoque) {     
+        return database.update("produto_estoque", ProdutoEstoqueToContentValues(produtoEstoque),"id_produto="+produtoEstoque.getId_produto()+" AND id_empresa="+id_empresa, null);         
+    }
+     
+    public void delete(ProdutoEstoque produtoEstoque) {              
+        database.delete("produto_estoque", "id_produto="+produtoEstoque.getId_produto()+" AND id_empresa="+id_empresa, null);
+    }    
+            
+	private ProdutoEstoque cursorToEntity(Cursor cursor) {
+		ProdutoEstoque produtoEstoque = new ProdutoEstoque();
+		produtoEstoque.setId_produto_estoque(cursor.getLong(0));
+		produtoEstoque.setId_produto_estoque_erp(cursor.getLong(1));
+		produtoEstoque.setId_empresa(cursor.getLong(2));
+		produtoEstoque.setId_produto(cursor.getInt(3));
+		produtoEstoque.setQtd(cursor.getDouble(4));		
+		return produtoEstoque;		
+    }		
+	
+	private ContentValues ProdutoEstoqueToContentValues(ProdutoEstoque produtoEstoque) {
+		ContentValues values = new ContentValues();		
+		values.put("id_produto_estoque", produtoEstoque.getId_produto_estoque());
+		values.put("id_produto_estoque_erp", produtoEstoque.getId_produto_estoque_erp());
+		values.put("id_empresa", produtoEstoque.getId_empresa());
+		values.put("id_produto", produtoEstoque.getId_produto());		
+		values.put("qtd", produtoEstoque.getQtd());		
+		return values;
+	}	
+}

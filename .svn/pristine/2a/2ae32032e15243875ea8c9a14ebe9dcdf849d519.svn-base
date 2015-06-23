@@ -1,0 +1,191 @@
+package br.com.simdata.forcavendas.view;
+
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+
+import br.com.caelum.stella.format.CNPJFormatter;
+import br.com.caelum.stella.format.CPFFormatter;
+import br.com.simdata.forcavendas.R;
+import br.com.simdata.forcavendas.dao.ClienteDAO;
+import br.com.simdata.forcavendas.dao.ContaReceberDAO;
+import br.com.simdata.forcavendas.model.cadastro.Cliente;
+import br.com.simdata.forcavendas.model.cadastro.ContaReceber;
+import br.com.simdata.forcavendas.model.venda.Pedido;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Spinner;
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
+import android.content.Intent;
+
+public class FormClienteActivity extends Activity {
+	
+	private ClienteDAO clienteDAO = new ClienteDAO(this);
+	private ContaReceberDAO contaReceberDAO = new ContaReceberDAO(this);
+	private Cliente cliente;	
+	
+	Button btn_form_clientes_voltar, btn_form_clientes_pedido, btn_form_cliente_informacoes;		
+	Spinner spinner_cliente_pesso, spinner_cliente_estado;	
+	EditText edit_cliente_codigo, edit_cliente_razao, edit_cliente_nome, edit_cliente_inscricao, edit_cliente_ddd, edit_cliente_telefone, edit_cliente_email, edit_cliente_endereco, edit_cliente_bairro, edit_cliente_municipio, edit_cliente_cep, edit_cliente_obs;
+	
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.form_clientes);
+
+		edit_cliente_codigo = (EditText) findViewById(R.id.edit_cliente_titulos_total);
+		edit_cliente_razao = (EditText) findViewById(R.id.edit_cliente_razao);
+		edit_cliente_nome = (EditText) findViewById(R.id.edit_cliente_nome);
+		edit_cliente_inscricao = (EditText) findViewById(R.id.edit_cliente_inscricao);
+		edit_cliente_ddd = (EditText) findViewById(R.id.edit_cliente_ddd);
+		edit_cliente_telefone = (EditText) findViewById(R.id.edit_cliente_telefone);
+		edit_cliente_email = (EditText) findViewById(R.id.edit_cliente_email);
+		edit_cliente_endereco = (EditText) findViewById(R.id.edit_cliente_endereco);
+		edit_cliente_bairro = (EditText) findViewById(R.id.edit_cliente_bairro);
+		edit_cliente_municipio = (EditText) findViewById(R.id.edit_cliente_municipio);	
+		edit_cliente_cep = (EditText) findViewById(R.id.edit_cliente_cep);
+		edit_cliente_obs = (EditText) findViewById(R.id.edit_cliente_obs);
+			
+		spinner_cliente_pesso = (Spinner) findViewById(R.id.spinner_cliente_pesso);
+		List<String> listPesso = Arrays.asList("Jurídica","Física");
+		ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(this,R.layout.spinner_item, listPesso);
+		dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		spinner_cliente_pesso.setAdapter(dataAdapter);		
+			
+		spinner_cliente_estado = (Spinner) findViewById(R.id.spinner_cliente_estado);	
+		List<String> listEstado = Arrays.asList("AC","AL","AM","AP","BA","CE","DF","ES","GO","MA","MG","MS","MT","PA","PB","PE","PI","PR","RJ","RN","RO","RR","RS","SC","SE","SP","TO");
+		ArrayAdapter<String> dataAdapter2 = new ArrayAdapter<String>(this,R.layout.spinner_item, listEstado);
+		dataAdapter2.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		spinner_cliente_estado.setAdapter(dataAdapter2);
+		
+		btn_form_clientes_voltar = (Button) findViewById(R.id.btn_form_clientes_voltar);
+		btn_form_clientes_pedido = (Button) findViewById(R.id.btn_form_clientes_pedido);
+		btn_form_cliente_informacoes = (Button) findViewById(R.id.btn_form_cliente_informacoes);
+		
+		Intent intent = getIntent();	    
+	    final String id = intent.getStringExtra("ID");
+	    
+        if(id != null){    	
+        	clienteDAO.open();
+    		cliente = clienteDAO.getById_cliente_erp(Integer.parseInt(id));
+    		clienteDAO.close();
+    		clienteToForm(cliente);         		
+        }
+                  			
+		btn_form_clientes_voltar.setOnClickListener(new View.OnClickListener() {//Botao voltar
+			public void onClick(View v) {				
+				Intent myIntent = new Intent(FormClienteActivity.this, ListClientesActivity.class);				
+				startActivity(myIntent);					
+				finish();					   
+				return;
+			}
+		});
+		
+		btn_form_clientes_pedido.setOnClickListener(new View.OnClickListener() {//Botao novo pedido
+			public void onClick(View v) {
+				contaReceberDAO.open();
+			    List<ContaReceber> contaRecebers = contaReceberDAO.ListAllbyId_cliente(cliente.getId_cliente_erp());
+			    contaReceberDAO.close();
+			   
+			    if(contaRecebers.size() > 0){//Se existirem titulos em aberto do cliente
+			    	Intent intent = new Intent(FormClienteActivity.this, AvisoClientesTitulosActivity.class);	
+				    intent.putExtra("ID", ""+cliente.getId_cliente_erp());//Passa id do cliente						   
+			   	    startActivity(intent);
+			   	    finish();	   
+			    }else{
+			        FormPedidoActivity.pedido = new Pedido();
+				    FormPedidoActivity.pedido.setDtprevi_entrega(new Date());
+				    FormPedidoActivity.pedido.setId_cliente(cliente.getId_cliente_erp());					
+			   	    Intent intent = new Intent(FormClienteActivity.this, FormPedidoActivity.class);				
+			   	    startActivity(intent);
+			   	    finish();
+			    }			    
+			}
+		});	
+		
+		btn_form_cliente_informacoes.setOnClickListener(new View.OnClickListener() {//Botao titulos em aberto TODO
+			public void onClick(View v) {	
+				Intent myIntent = new Intent(FormClienteActivity.this, ListClientesTitulosActivity.class);
+				myIntent.putExtra("ID", id);//Passa id do cliente
+				startActivity(myIntent);					
+				finish();					   
+				return;
+			}
+		});
+	}
+	
+	@Override
+    public void onBackPressed() {//Botao de voltar do android
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);   	 
+    	builder.setTitle("SimData");
+    	builder.setMessage("Você tem certeza que deseja sair do sistema?");
+    	     	 
+    	builder.setPositiveButton("Sim", new DialogInterface.OnClickListener() {    	
+    	    public void onClick(DialogInterface dialog, int which) {// Code that is executed when clicking YES    	        
+    	        dialog.dismiss();//Fecha dialog
+    	        sair();//Sai do app
+    	    }    	 
+    	});    	     	 
+    	builder.setNegativeButton("Não", new DialogInterface.OnClickListener() {
+    		public void onClick(DialogInterface dialog, int which) {// Code that is executed when clicking NO
+    			dialog.dismiss();//Fecha dialog
+    	    }    	 
+    	});
+        
+        AlertDialog alert = builder.create();
+    	alert.show();//Mostra dialog        
+    }
+	
+	public void sair(){//Sai do aplicativo
+		super.onBackPressed();//Executa metodo nativo do botao voltar do android
+	}
+	 
+	@SuppressWarnings("rawtypes")
+	private void clienteToForm(Cliente cliente){		
+		edit_cliente_codigo.setText(cliente.getId_cliente_erp().toString()); 				
+		edit_cliente_razao.setText(cliente.getRazao());		
+		edit_cliente_nome.setText(cliente.getNome());		
+		
+		//Tipo de inscricao	
+		ArrayAdapter adapter_pesso = (ArrayAdapter) spinner_cliente_pesso.getAdapter();	
+		for (int position = 0; position < adapter_pesso.getCount(); position++){		
+			String pesso = (String) adapter_pesso.getItem(position);					
+			if(cliente.getPesso() == (pesso.equals("Jurídica") ? 1 : 2)){
+				spinner_cliente_pesso.setSelection(position);				
+				break; 
+			}
+		}		
+		
+		edit_cliente_inscricao.setText(cliente.getCgcpf().length() > 11 ? new CNPJFormatter().format(cliente.getCgcpf()) : new CPFFormatter().format(cliente.getCgcpf()));
+		edit_cliente_ddd.setText(cliente.getDdd().toString());
+		edit_cliente_telefone.setText(cliente.getTelef());
+		edit_cliente_email.setText(cliente.getE_mail());
+		edit_cliente_endereco.setText(cliente.getEndereco());
+		edit_cliente_bairro.setText(cliente.getBairro());
+		edit_cliente_municipio.setText(cliente.getMunicipio());
+		
+		//Estado (UF)
+		ArrayAdapter adapter_estado = (ArrayAdapter) spinner_cliente_estado.getAdapter();	
+		for (int position = 0; position < adapter_estado.getCount(); position++){		
+			String estado = (String) adapter_estado.getItem(position);
+			if(cliente.getUf().equals(estado)){
+				spinner_cliente_estado.setSelection(position);				
+				break; 
+			}
+		}	
+		
+		edit_cliente_cep.setText(cliente.getCep());
+		edit_cliente_obs.setText(cliente.getObs());
+		
+		//if(cliente == null || cliente.getId_parceiro() == null){
+		//	btn_form_clientes_pedido.setEnabled(false);		
+		//}else{
+		//	btn_form_clientes_pedido.setEnabled(true);						
+		//}				
+	}		
+}

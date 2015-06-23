@@ -1,0 +1,78 @@
+package br.com.simdata.forcavendas.model.cadastro;
+
+import java.io.Serializable;
+import java.util.Date;
+
+public class ContaReceber implements Serializable {
+
+	private static final long serialVersionUID = 1L;
+
+	private Long id_ctr;	
+	private Long id_ctr_erp;
+	private Long id_empresa;//id da empresa local
+	private int id_cliente;
+	private String numero;
+	private Date vecto;
+	private double saldo;
+
+	public ContaReceber() {
+		super();		
+	}
+
+	public Long getId_ctr() {
+		return id_ctr;
+	}
+
+	public void setId_ctr(Long id_ctr) {
+		this.id_ctr = id_ctr;
+	}
+
+	public Long getId_ctr_erp() {
+		return id_ctr_erp;
+	}
+
+	public void setId_ctr_erp(Long id_ctr_erp) {
+		this.id_ctr_erp = id_ctr_erp;
+	}
+
+	public Long getId_empresa() {
+		return id_empresa;
+	}
+
+	public void setId_empresa(Long id_empresa) {
+		this.id_empresa = id_empresa;
+	}
+
+	public int getId_cliente() {
+		return id_cliente;
+	}
+
+	public void setId_cliente(int id_cliente) {
+		this.id_cliente = id_cliente;
+	}
+
+	public String getNumero() {
+		return numero;
+	}
+
+	public void setNumero(String numero) {
+		this.numero = numero;
+	}
+
+	public Date getVecto() {
+		return vecto;
+	}
+
+	public void setVecto(Date vecto) {
+		this.vecto = vecto;
+	}
+
+	public double getSaldo() {
+		return saldo;
+	}
+
+	public void setSaldo(double saldo) {
+		this.saldo = saldo;
+	}
+	
+}

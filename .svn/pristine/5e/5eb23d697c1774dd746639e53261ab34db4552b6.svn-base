@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:fillViewport="true" >
+
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:background="#CCCCCC"
+        android:focusableInTouchMode="true" >
+
+        <TextView
+            android:id="@+id/textView1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_below="@+id/edit_login_usuario"
+            android:layout_marginLeft="50dp"
+            android:layout_marginRight="50dp"
+            android:layout_marginTop="14dp"
+            android:text="@string/senha"            
+            android:textColor="#372c24" />
+
+        <EditText
+            android:id="@+id/edit_cliente_codigo"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentRight="true"
+            android:layout_below="@+id/textView1"
+            android:layout_marginLeft="50dp"
+            android:layout_marginRight="50dp"
+            android:background="@layout/style_edittext"
+            android:ems="10"
+            android:inputType="textPassword"
+            android:singleLine="true" />
+
+        <Button
+            android:id="@+id/btn_login_entrar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentRight="true"
+            android:layout_below="@+id/edit_cliente_codigo"
+            android:layout_marginLeft="50dp"
+            android:layout_marginRight="50dp"
+            android:layout_marginTop="29dp"
+            android:background="@layout/style_button"
+            android:minHeight="50dip"
+            android:text="@string/entrar"
+            android:textAlignment="center"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/textView3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/spinner_login_empresa"
+            android:layout_centerHorizontal="true"
+            android:layout_marginLeft="50dp"
+            android:layout_marginRight="50dp"
+            android:text="@string/usuario"
+            android:textColor="#372c24" />
+
+        <EditText
+            android:id="@+id/edit_login_usuario"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentRight="true"
+            android:layout_below="@+id/textView3"
+            android:layout_marginLeft="50dp"
+            android:layout_marginRight="50dp"
+            android:background="@layout/style_edittext"
+            android:ems="10"
+            android:inputType="text"
+            android:singleLine="true"  />
+
+        <ImageView
+            android:id="@+id/imageView1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_marginBottom="25dp"
+            android:layout_marginTop="50dp"
+            android:contentDescription="@string/simdata"
+            android:src="@drawable/logo" />
+
+        <TextView
+            android:id="@+id/textView2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="10dp"
+            android:text="@string/wwwsimdatacombr"
+            android:textColor="#372c24" />
+
+       		<Spinner
+       		    android:id="@+id/spinner_login_empresa"
+       		    android:layout_width="match_parent"
+       		    android:layout_height="wrap_content"
+       		    android:layout_alignParentLeft="true"
+       		    android:layout_below="@+id/textViewEmpresa"
+       		    android:layout_marginBottom="14dp"
+       		    android:layout_marginLeft="50dp"
+       		    android:layout_marginRight="50dp"
+       		    android:background="@layout/style_button"
+       		    android:minHeight="30dip"
+       		    android:paddingLeft="10dp"
+       		    android:textColor="#FFFFFF" />
+
+       		<TextView
+       		    android:id="@+id/textViewEmpresa"
+       		    android:layout_width="match_parent"
+       		    android:layout_height="wrap_content"
+       		    android:layout_below="@+id/imageView1"
+       		    android:layout_marginLeft="50dp"
+       		    android:layout_marginRight="50dp"
+       		    android:text="@string/empresa"
+       		    android:textColor="#372c24" />
+
+    </RelativeLayout>
+
+</ScrollView>

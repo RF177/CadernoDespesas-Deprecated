@@ -1,0 +1,98 @@
+package br.com.simdata.forcavendas.dao;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import br.com.simdata.forcavendas.model.Configuracao;
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.Cursor;
+import android.database.SQLException;
+import android.database.sqlite.SQLiteDatabase;
+ 
+//http://escoladeandroid.blogspot.com.br/2012/02/android-criando-uma-agenda-de-contatos.html
+
+public class ConfiguracaoDAO {
+ 
+    private SQLiteDatabase  database;
+    private DataBaseHandler dbHelper;
+ 
+    public ConfiguracaoDAO(Context context) {
+        dbHelper = new DataBaseHandler(context);
+    }
+ 
+    public void open() throws SQLException {
+        database = dbHelper.getWritableDatabase();
+    }
+ 
+    public void close() {
+        dbHelper.close();
+    }
+    
+    public List<Configuracao> ListAll() {
+        List<Configuracao> configuracaos = new ArrayList<Configuracao>();
+ 
+        String selectQuery = "SELECT * FROM cfg;";
+        Cursor cursor = database.rawQuery(selectQuery, null);
+        cursor.moveToFirst();
+        
+        while (!cursor.isAfterLast()) {
+        	Configuracao configuracao = cursorToContato(cursor);
+        	configuracaos.add(configuracao);
+            cursor.moveToNext();
+        }
+        
+        cursor.close();//Tenha certeza que você fechou o cursor
+        return configuracaos;    	
+    }    
+    
+    public Configuracao getByid(long id_cfg){
+
+		String selectQuery = "SELECT * FROM cfg WHERE id_cfg="+id_cfg;
+	
+    	Cursor cursor = database.rawQuery(selectQuery, null);
+    	if (cursor != null)
+    	    cursor.moveToFirst();
+
+    	Configuracao configuracao = new Configuracao(Integer.parseInt(cursor.getString(0)),
+    												 Integer.parseInt(cursor.getString(0)),
+    												 Integer.parseInt(cursor.getString(0)));        	        	        	
+    	cursor.close();
+    
+    	return configuracao;
+    }
+    
+        
+    public long insert(Configuracao configuracao) {
+        ContentValues values = new ContentValues();
+ 
+        values.put("id_cfg", configuracao.getId_cfg());
+        values.put("id_empresa", configuracao.getId_empresa());
+        values.put("id_vendedor", configuracao.getId_empresa());
+         
+        return database.insert("cfg", null, values);    
+    }     
+     
+    public int update(Configuracao configuracao) {     
+        ContentValues values = new ContentValues();
+              
+        values.put("id_cfg", configuracao.getId_cfg());
+        values.put("id_empresa", configuracao.getId_empresa());
+        values.put("id_vendedor", configuracao.getId_empresa());       
+
+        return database.update("cfg", values,"id_cfg = " + configuracao.getId_cfg(), null);         
+    }
+     
+    public void delete(Configuracao configuracao) {              
+        database.delete("cfg", "id_cfg  = " + configuracao.getId_cfg(), null);
+    }
+     
+    //Converter o Cursor de dados no objeto POJO Configuracao  
+	private Configuracao cursorToContato(Cursor cursor) {
+    	Configuracao configuracao = new Configuracao();
+    	configuracao.setId_cfg(cursor.getInt(0));
+    	configuracao.setId_empresa(cursor.getInt(1));
+    	configuracao.setId_vendedor(cursor.getInt(2));    
+        return configuracao;
+    }
+}

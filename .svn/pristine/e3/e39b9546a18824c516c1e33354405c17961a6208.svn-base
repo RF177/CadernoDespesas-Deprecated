@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lint>
+    <issue id="DefaultLocale">
+        <ignore path="src/br/com/simdata/forcavendas/dao/ClienteDAO.java" />
+        <ignore path="src/br/com/simdata/forcavendas/dao/PedidoDAO.java" />
+        <ignore path="src/br/com/simdata/forcavendas/dao/ProdutoDAO.java" />
+    </issue>
+</lint>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Caderno de Despesas</string>
+    
+    <string name="logonome">LOGONOME</string>
+    <string name="rf17corp">© RF17 Corp.</string>
+    
+    <string name="msg_cadastro_senha">Por favor, digite uma senha que será usada para entrar no sistema posteriormente.</string>
+    <string name="informe_senha">Senha</string>    
+    <string name="senha">Senha:</string>
+    <string name="confirm_senha">Confirmar Senha:</string>
+    <string name="salvar_dados">Salvar Dados</string>
+    <string name="restaurar_dados">Restaurar Dados</string>
+    
+    <string name="ok">OK</string>
+    
+    <string name="saldo">Saldo:</string>
+    <string name="novo">Novo</string>
+    <string name="plus">+</string>
+    
+    <string name="voltar">Voltar</string>
+    <string name="salvar">Salvar</string>
+    <string name="excluir">Excluir</string>
+    
+    <string name="valor">Valor</string>
+    <string name="tipo">Tipo</string>
+    <string name="data">Data</string>
+    <string name="descricao">Descrição</string>
+    
+</resources>

@@ -1,0 +1,120 @@
+package br.com.simdata.forcavendas.dao;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import br.com.simdata.forcavendas.model.venda.Pedido;
+import br.com.simdata.forcavendas.util.DataUtils;
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.Cursor;
+import android.database.SQLException;
+import android.database.sqlite.SQLiteDatabase;
+ 
+public class PedidoDAO {
+ 
+    private SQLiteDatabase  database;
+    private DataBaseHandler dbHelper;
+ 
+    public PedidoDAO(Context context) {
+        dbHelper = new DataBaseHandler(context);
+    }
+ 
+    public void open() throws SQLException {
+        database = dbHelper.getWritableDatabase();
+    }
+ 
+    public void close() {
+        dbHelper.close();
+    }
+    
+    public List<Pedido> ListAll(String filtro) {
+        List<Pedido> pedidos = new ArrayList<Pedido>();
+ 
+        String selectQuery = "SELECT * FROM pedidos;";
+        Cursor cursor = database.rawQuery(selectQuery, null);
+        cursor.moveToFirst();
+        
+        while (!cursor.isAfterLast()) {
+        	Pedido pedido = cursorToEntity(cursor);
+        	pedidos.add(pedido);
+            cursor.moveToNext();
+        }
+        
+        cursor.close();//Tenha certeza que você fechou o cursor
+        return pedidos;    	
+    }    
+    
+    public Pedido getByid(int id){
+
+		String selectQuery = "SELECT * FROM pedidos WHERE id="+id;	
+    	Cursor cursor = database.rawQuery(selectQuery, null);
+    	if (cursor != null)
+    	    cursor.moveToFirst();
+
+    	Pedido pedido = cursorToEntity(cursor); 
+    	cursor.close();    
+    	
+    	return pedido;
+    }
+
+    public Pedido getByidPedido(long id_pedido){
+    	Pedido pedido = null;
+		String selectQuery = "SELECT * FROM pedidos WHERE id_pedido ="+id_pedido;	
+    	Cursor cursor = database.rawQuery(selectQuery, null);
+    	if (cursor != null && cursor.getCount() > 0){
+    	    cursor.moveToFirst();    	    
+    	    pedido = cursorToEntity(cursor);     	                	 
+    	}
+    	cursor.close();    	
+    	return pedido;    	    	       	  
+    }    
+                
+    public long insert(Pedido pedido) {      	 
+        return database.insert("pedidos", null, pedidoToContentValues(pedido));    
+    }     
+     
+    public int update(Pedido pedido) {     
+        return database.update("pedidos", pedidoToContentValues(pedido),"id = " + pedido.getId(), null);         
+    }
+     
+    public void delete(Pedido pedido) {              
+        database.delete("pedidos", "id  = " + pedido.getId(), null);
+    }
+            
+	private Pedido cursorToEntity(Cursor cursor) {    			
+		Pedido pedido = new Pedido();		
+		pedido.setId(cursor.getLong(0));
+		pedido.setId_empresa(cursor.getLong(1));
+		pedido.setNumero(cursor.getLong(2));
+		pedido.setSituacao(cursor.getString(3)); 	
+		pedido.setId_cliente(cursor.getLong(4));
+		pedido.setId_formapag(cursor.getLong(5));
+		pedido.setId_prazopag(cursor.getLong(6));					
+		pedido.setDtprevi_entrega(DataUtils.getDateBd(cursor.getString(7)));	
+		pedido.setTipo(cursor.getString(8));
+		pedido.setDescp(cursor.getDouble(9));
+		pedido.setDescv(cursor.getDouble(10));
+		//pedido.setTot_ped(cursor.getDouble(11));
+		pedido.setObs(cursor.getString(12));
+        return pedido;
+    }
+		
+	private ContentValues pedidoToContentValues(Pedido pedido) {
+		ContentValues values = new ContentValues();				
+		values.put("id",pedido.getId());
+		values.put("id_empresa",pedido.getId_empresa());
+		values.put("numero",pedido.getNumero());
+		values.put("situacao",pedido.getSituacao());
+		values.put("id_cliente",pedido.getId_cliente());
+		values.put("id_formapag",pedido.getId_formapag());
+		values.put("id_prazopag",pedido.getId_prazopag());		
+		values.put("dtprevi_entrega",DataUtils.setDateBd(pedido.getDtprevi_entrega()));		
+		values.put("tipo",pedido.getTipo());
+		values.put("descp",pedido.getDescp());
+		values.put("descv",pedido.getDescv());
+		//values.put("tot_ped",pedido.getTot_ped());
+		values.put("obs",pedido.getObs());		
+		return values;
+	}	
+}

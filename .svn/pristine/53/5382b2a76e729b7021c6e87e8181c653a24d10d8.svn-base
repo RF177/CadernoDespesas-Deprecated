@@ -1,0 +1,59 @@
+package br.com.simdata.forcavendas.model.cadastro;
+
+import java.io.Serializable;
+
+public class ProdutoEstoque implements Serializable {
+
+	private static final long serialVersionUID = 1L;
+
+	private Long id_produto_estoque;
+	private Long id_produto_estoque_erp;
+	private Long id_empresa;//id da empresa local
+	private int id_produto;	
+	private double qtd;
+	
+	public ProdutoEstoque() {
+		super();
+	}
+
+	public Long getId_produto_estoque() {
+		return id_produto_estoque;
+	}
+
+	public void setId_produto_estoque(Long id_produto_estoque) {
+		this.id_produto_estoque = id_produto_estoque;
+	}
+
+	public Long getId_produto_estoque_erp() {
+		return id_produto_estoque_erp;
+	}
+
+	public void setId_produto_estoque_erp(Long id_produto_estoque_erp) {
+		this.id_produto_estoque_erp = id_produto_estoque_erp;
+	}
+
+	public Long getId_empresa() {
+		return id_empresa;
+	}
+
+	public void setId_empresa(Long id_empresa) {
+		this.id_empresa = id_empresa;
+	}
+
+	public int getId_produto() {
+		return id_produto;
+	}
+
+	public void setId_produto(int id_produto) {
+		this.id_produto = id_produto;
+	}
+
+	public double getQtd() {
+		return qtd;
+	}
+
+	public void setQtd(double qtd) {
+		this.qtd = qtd;
+	}
+		
+}

@@ -1,0 +1,59 @@
+package br.com.simdata.forcavendas.model.venda;
+
+public class FormaPagamento{
+
+	private long id_formapag;
+	private long id_empresa;
+	private int ativa;
+	private String descricao;	
+
+	public FormaPagamento() {
+		super();		
+	}
+
+	public FormaPagamento(long id_formapag, long id_empresa, int ativa, String descricao) {
+		super();
+		this.id_formapag = id_formapag;
+		this.id_empresa = id_empresa;
+		this.ativa = ativa;
+		this.descricao = descricao;
+	}
+
+	public long getId_formapag() {
+		return id_formapag;
+	}
+
+	public void setId_formapag(long id_formapag) {
+		this.id_formapag = id_formapag;
+	}
+
+	public long getId_empresa() {
+		return id_empresa;
+	}
+
+	public void setId_empresa(long id_empresa) {
+		this.id_empresa = id_empresa;
+	}
+
+	public int isAtiva() {
+		return ativa;
+	}
+
+	public void setAtiva(int ativa) {
+		this.ativa = ativa;
+	}
+
+	public String getDescricao() {
+		return descricao;
+	}
+
+	public void setDescricao(String descricao) {
+		this.descricao = descricao;
+	}
+	
+	//Aqui esta a mágica, sem este método você terá uma exceção - http://aqueleblogdeandroid.blogspot.com.br/2011/02/utilizando-spinner-com-objetos.html
+	public String toString() {  
+		return (this.getDescricao());  
+	}  	
+	
+}

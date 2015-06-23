@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="br.com.simdata.forcavendas"
+    android:versionCode="1"
+    android:versionName="1.0" >
+
+    <uses-sdk
+        android:minSdkVersion="8"
+        android:targetSdkVersion="19" />
+    
+ 	<uses-permission android:name="android.permission.INTERNET"/>    
+
+    <application
+        android:allowBackup="false"
+        android:icon="@drawable/icon"
+        android:label="@string/app_name"
+        android:theme="@android:style/Theme.NoTitleBar" >
+        <activity
+            android:name="br.com.simdata.forcavendas.view.SplashScreen"
+            android:label="@string/app_name" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+                
+        <activity
+            android:name="br.com.simdata.forcavendas.view.MainActivity"
+            android:label="SimDataForcaVendas" >
+        </activity>
+        
+        <activity
+            android:name="br.com.simdata.forcavendas.view.FormLoginActivity"
+            android:label="Logim" >
+        </activity>
+        
+        <activity
+            android:name="br.com.simdata.forcavendas.view.CfgActivity"
+            android:label="Configuracao" >
+        </activity>
+        
+        <activity
+            android:name="br.com.simdata.forcavendas.view.FormSincronizacaoActivity"
+            android:label="Sincronizacao" >
+        </activity>         
+                
+        <activity
+            android:name="br.com.simdata.forcavendas.view.ListClientesActivity"
+            android:label="Lista Clientes" >
+        </activity>
+        
+        <activity
+            android:name="br.com.simdata.forcavendas.view.FormClienteActivity"
+            android:label="Cliente" >
+        </activity>
+
+        <activity
+            android:name="br.com.simdata.forcavendas.view.ListProdutosActivity"
+            android:label="Lista Produtos" >
+        </activity>        
+        
+     	<activity
+            android:name="br.com.simdata.forcavendas.view.FormProdutoActivity"
+            android:label="Produto" >
+        </activity>   
+
+     	<activity
+            android:name="br.com.simdata.forcavendas.view.ListPedidosActivity"
+            android:label="Pedidos" >
+        </activity>        	
+     	
+         <activity
+            android:name="br.com.simdata.forcavendas.view.FormPedidoActivity"
+            android:label="Pedido" >
+        </activity>        	
+    </application>
+</manifest>

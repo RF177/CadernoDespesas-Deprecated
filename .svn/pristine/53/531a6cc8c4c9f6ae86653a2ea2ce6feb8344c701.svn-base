@@ -1,0 +1,105 @@
+package br.com.simdata.forcavendas.dao;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import br.com.simdata.forcavendas.model.cadastro.Produto;
+import br.com.simdata.forcavendas.util.StringFunctions;
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.Cursor;
+import android.database.SQLException;
+import android.database.sqlite.SQLiteDatabase;
+ 
+public class ProdutoDAO {
+ 
+    private SQLiteDatabase  database;
+    private DataBaseHandler dbHelper;
+ 
+    public ProdutoDAO(Context context) {
+        dbHelper = new DataBaseHandler(context);
+    }
+ 
+    public void open() throws SQLException {
+        database = dbHelper.getWritableDatabase();
+    }
+ 
+    public void close() {
+        dbHelper.close();
+    }
+    
+    public List<Produto> ListAll(String filtro) {
+        List<Produto> produtos = new ArrayList<Produto>();
+ 
+        String selectQuery = "";
+        if(filtro == null || filtro.equals("")){//Nao aplica filtros
+        	selectQuery = "SELECT * FROM produtos WHERE ativo = 1 ORDER BY descricao LIMIT 25";
+        }else{//Aplica os filtros        	
+        	if(StringFunctions.isInteger(filtro)){//verifica se eh numerico	(codigo)	
+            	selectQuery = "SELECT * FROM produtos WHERE codigo = "+filtro+" AND ativo = 1 ORDER BY descricao LIMIT 25";
+        	}else{//Verifica pelo nome (descricao)
+        		selectQuery = "SELECT * FROM produtos WHERE descricao AND ativo = 1 LIKE '%"+StringFunctions.clearAccents(filtro.toUpperCase())+"%' ORDER BY descricao LIMIT 25";
+        	}        	
+        }
+        
+        Cursor cursor = database.rawQuery(selectQuery, null);
+        cursor.moveToFirst();
+        
+        while (!cursor.isAfterLast()) {
+        	Produto produto = cursorToEntity(cursor);
+        	produtos.add(produto);
+            cursor.moveToNext();
+        }
+        
+        cursor.close();//Tenha certeza que você fechou o cursor
+        return produtos;    	
+    }    
+    
+    public Produto getByid(long id_produto){
+    	Produto produto = null;
+		String selectQuery = "SELECT * FROM produtos WHERE id_produto="+id_produto;	
+    	Cursor cursor = database.rawQuery(selectQuery, null);
+    	if (cursor != null && cursor.getCount() > 0){
+    	    cursor.moveToFirst();    	    
+    	    produto = cursorToEntity(cursor);     	                	 
+    	}
+    	cursor.close();    	
+    	return produto;    	    	       	  
+    }
+    
+    public long insert(Produto produto) {      	 
+        return database.insert("produtos", null, produtoToContentValues(produto));    
+    }     
+     
+    public int update(Produto produto) {     
+        return database.update("produtos", produtoToContentValues(produto),"id_produto = " + produto.getId_produto(), null);         
+    }
+     
+    public void delete(Produto produto) {              
+        database.delete("produtos", "id_produto  = " + produto.getId_produto(), null);
+    }
+            
+	private Produto cursorToEntity(Cursor cursor) {    			
+		Produto produto = new Produto();
+    	produto.setId_produto(cursor.getLong(0));
+    	produto.setAtivo(cursor.getInt(cursor.getInt(1)));
+    	produto.setCodigo(cursor.getString(2));
+    	produto.setDescricao(cursor.getString(3));
+    	produto.setUnidade(cursor.getString(4));
+    	produto.setQtdestoque(cursor.getDouble(5));
+    	produto.setPreco(cursor.getDouble(6));
+        return produto;
+    }
+		
+	private ContentValues produtoToContentValues(Produto produto) {
+		ContentValues values = new ContentValues();
+		values.put("id_produto", produto.getId_produto());
+		values.put("codigo", produto.getCodigo());
+		values.put("ativo", produto.isAtivo());
+		values.put("descricao", produto.getDescricao());
+		values.put("unidade", produto.getUnidade());
+		values.put("qtdestoque", produto.getQtdestoque());
+		values.put("preco", produto.getPreco());			
+		return values;		
+	}
+}

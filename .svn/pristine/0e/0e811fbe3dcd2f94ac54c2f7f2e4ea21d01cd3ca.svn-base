@@ -1,0 +1,114 @@
+package br.com.simdata.forcavendas.view;
+
+import java.util.Date;
+import java.util.List;
+
+import br.com.caelum.stella.format.CNPJFormatter;
+import br.com.caelum.stella.format.CPFFormatter;
+import br.com.simdata.forcavendas.R;
+import br.com.simdata.forcavendas.dao.ClienteDAO;
+import br.com.simdata.forcavendas.model.cadastro.Cliente;
+import br.com.simdata.forcavendas.model.venda.Pedido;
+import android.os.Bundle;
+import android.widget.LinearLayout;
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
+
+public class ListClientesActivity extends Activity {
+	
+	private ClienteDAO clienteDAO = new ClienteDAO(this);
+	private List<Cliente> parceiros;
+	
+    private LinearLayout linear_listview_clientes;			
+	private Button btn_list_clientes_voltar, btn_list_clientes_pesquisa;
+	EditText edit_cliente_pesquisa;
+	
+	//auxiliar
+	boolean selecionar = false;
+	
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.list_clientes);		
+			
+		Intent intent = getIntent();	    
+	    String p_selecionar = intent.getStringExtra("SELECIONAR");
+        if(p_selecionar != null && p_selecionar.equals("true")){
+        	selecionar = true;     
+        }
+
+		linear_listview_clientes = (LinearLayout) findViewById(R.id.linear_listview_clientes);		
+		btn_list_clientes_voltar = (Button) findViewById(R.id.btn_list_clientes_voltar);
+		btn_list_clientes_pesquisa = (Button) findViewById(R.id.btn_list_clientes_pesquisa);
+		edit_cliente_pesquisa = (EditText) findViewById(R.id.edit_cliente_pesquisa);
+		
+		btn_list_clientes_voltar.setOnClickListener(new View.OnClickListener() {//Botao para voltar
+			public void onClick(View v) {
+				Intent myIntent = new Intent(ListClientesActivity.this, MainActivity.class);			
+				startActivity(myIntent);
+				finish();
+				return;
+			}
+		});		
+	
+		btn_list_clientes_pesquisa.setOnClickListener(new View.OnClickListener() {//Botao de pesquisar
+			public void onClick(View v) {
+				filtrar();
+			}
+		});					
+	}
+	
+
+	public void filtrar(){		
+		String filtro = edit_cliente_pesquisa.getText().toString();
+		
+		clienteDAO.open();	
+		parceiros = clienteDAO.ListAll(filtro);
+		clienteDAO.close();
+		
+		linear_listview_clientes.removeAllViews();//Remove a lista antiga, para criar novamente
+		
+		for(Cliente parceiro : parceiros){			
+			LayoutInflater inflater  = (LayoutInflater) getApplicationContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+			final View mLinearView = inflater.inflate(R.layout.list_cliente_row, null);
+			mLinearView.setId(parceiro.getId_parceiro().intValue());
+						
+			TextView edit_list_cliente_row_razao = (TextView) mLinearView.findViewById(R.id.edit_list_cliente_row_razao);
+			TextView edit_list_cliente_row_endereco = (TextView) mLinearView.findViewById(R.id.edit_list_cliente_row_endereco);
+			TextView edit_list_cliente_row_fone = (TextView) mLinearView.findViewById(R.id.edit_list_cliente_row_fone);
+			TextView edit_list_cliente_row_inscricao = (TextView) mLinearView.findViewById(R.id.edit_list_cliente_row_inscricao);													
+			edit_list_cliente_row_razao.setText(parceiro.getRazao());
+			edit_list_cliente_row_endereco.setText("Munícipio: " + parceiro.getMunicipio());
+			edit_list_cliente_row_fone.setText("Telefone: " + "("+parceiro.getDdd()+") " + parceiro.getTelef());
+			edit_list_cliente_row_inscricao.setText("Inscrição: " + (parceiro.getCgcpf().length() > 11 ? new CNPJFormatter().format(parceiro.getCgcpf()) : new CPFFormatter().format(parceiro.getCgcpf())));
+						
+			linear_listview_clientes.addView(mLinearView);
+ 			
+			mLinearView.setOnClickListener(new OnClickListener() {
+				@Override
+				public void onClick(View v) {						
+				   if(selecionar){					  
+					   FormPedidoActivity.pedido = new Pedido();
+					   FormPedidoActivity.pedido.setDtprevi_entrega(new Date());
+					   FormPedidoActivity.pedido.setId_cliente(mLinearView.getId());					
+					   Intent intent = new Intent(ListClientesActivity.this, FormPedidoActivity.class);				
+					   startActivity(intent);
+					   finish();					   					   					 
+				   }else{
+					   Intent intent = new Intent(ListClientesActivity.this, FormClienteActivity.class); 		
+					   intent.putExtra("ID", ""+mLinearView.getId());
+					   startActivity(intent);
+					   finish();
+				   }				   
+				}
+			});
+		}
+	}	
+}

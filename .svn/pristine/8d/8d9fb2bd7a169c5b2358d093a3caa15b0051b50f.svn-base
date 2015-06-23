@@ -1,0 +1,129 @@
+package br.com.simdata.forcavendas.view;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+
+import br.com.simdata.forcavendas.R;
+import br.com.simdata.forcavendas.dao.ContaReceberDAO;
+import br.com.simdata.forcavendas.model.cadastro.ContaReceber;
+import br.com.simdata.forcavendas.model.venda.Pedido;
+import br.com.simdata.forcavendas.util.DataUtils;
+import br.com.simdata.forcavendas.util.StringFunctions;
+import android.os.Bundle;
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+
+public class AvisoClientesTitulosActivity extends Activity {
+	
+	private ContaReceberDAO contaReceberDAO = new ContaReceberDAO(this);
+	private List<ContaReceber> contaRecebers;
+	
+    private LinearLayout linear_listview_titulos;			
+	private Button btn_aviso_titulos_sim, btn_aviso_titulos_nao;	
+	private TextView textView_msg_aviso_titulos;
+	
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.aviso_titulos);		
+		
+		linear_listview_titulos = (LinearLayout) findViewById(R.id.linear_listview_titulos);		
+		btn_aviso_titulos_sim = (Button) findViewById(R.id.btn_aviso_titulos_sim);
+		btn_aviso_titulos_nao = (Button) findViewById(R.id.btn_aviso_titulos_nao);
+		textView_msg_aviso_titulos = (TextView) findViewById(R.id.textView_msg_aviso_titulos);
+					
+		btn_aviso_titulos_nao.setOnClickListener(new View.OnClickListener() {//Botao NAO
+			public void onClick(View v) {
+				Intent myIntent = new Intent(AvisoClientesTitulosActivity.this, ListPedidosActivity.class);	
+				startActivity(myIntent);
+				finish();
+				return;
+			}
+		});	
+		
+		final String id_cliente = getIntent().getStringExtra("ID");
+		btn_aviso_titulos_sim.setOnClickListener(new View.OnClickListener() {//Botao SIM
+			public void onClick(View v) {
+				FormPedidoActivity.pedido = new Pedido();
+				FormPedidoActivity.pedido.setData(new Date());
+				FormPedidoActivity.pedido.setDtprevi_entrega(new Date());
+				FormPedidoActivity.pedido.setId_cliente(Long.parseLong(id_cliente));					
+			   	Intent intent = new Intent(AvisoClientesTitulosActivity.this, FormPedidoActivity.class);				
+			   	startActivity(intent);
+			   	finish();
+			}
+		});	
+		
+		filtrar(id_cliente);						
+	}
+	
+    public void onBackPressed() {//Botao de voltar do android
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);   	 
+    	builder.setTitle("SimData");
+    	builder.setMessage("Você tem certeza que deseja sair do sistema?");
+    	     	 
+    	builder.setPositiveButton("Sim", new DialogInterface.OnClickListener() {    	
+    	    public void onClick(DialogInterface dialog, int which) {// Code that is executed when clicking YES    	        
+    	        dialog.dismiss();//Fecha dialog
+    	        sair();//Sai do app
+    	    }    	 
+    	});    	     	 
+    	builder.setNegativeButton("Não", new DialogInterface.OnClickListener() {
+    		public void onClick(DialogInterface dialog, int which) {// Code that is executed when clicking NO
+    			dialog.dismiss();//Fecha dialog
+    	    }    	 
+    	});
+        
+        AlertDialog alert = builder.create();
+    	alert.show();//Mostra dialog        
+    }	
+	public void sair(){//Sai do aplicativo
+		super.onBackPressed();//Executa metodo nativo do botao voltar do android
+	}
+	
+	public void filtrar(String id_cliente){	
+		double total = 0.0;
+		linear_listview_titulos.removeAllViews();//Remove a lista antiga, para criar novamente
+		
+		contaReceberDAO.open();
+		contaRecebers = contaReceberDAO.ListAllbyId_cliente(Integer.parseInt(id_cliente));
+		contaReceberDAO.close();
+		
+		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());//Usado para formatar a data de emissao e vecto
+		Date dataAtual = new Date();
+		
+		for (ContaReceber ctr : contaRecebers) {
+			LayoutInflater inflater  = (LayoutInflater) getApplicationContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+			final View mLinearView = inflater.inflate(R.layout.list_titulos_row, null);
+			
+			TextView edit_list_cliente_titulos_row_numero = (TextView) mLinearView.findViewById(R.id.edit_list_cliente_titulos_row_numero);
+			TextView edit_list_cliente_titulos_row_emiss = (TextView) mLinearView.findViewById(R.id.edit_list_cliente_titulos_row_emiss);
+			TextView edit_list_cliente_titulos_row_vecto = (TextView) mLinearView.findViewById(R.id.edit_list_cliente_titulos_row_vecto);
+			TextView edit_list_cliente_titulos_row_dias = (TextView) mLinearView.findViewById(R.id.edit_list_cliente_titulos_row_dias);
+			TextView edit_list_cliente_titulos_row_saldo = (TextView) mLinearView.findViewById(R.id.edit_list_cliente_titulos_row_saldo);	
+			
+			edit_list_cliente_titulos_row_numero.setText("Número: "+ctr.getNumero());
+			edit_list_cliente_titulos_row_emiss.setText("Emissão: "+ sdf.format(ctr.getEmiss()));
+			edit_list_cliente_titulos_row_vecto.setText("Vencimento: "+ sdf.format(ctr.getVecto()));
+			edit_list_cliente_titulos_row_dias.setText("Dias: "+DataUtils.intervaloDias(ctr.getVecto(), dataAtual));
+			edit_list_cliente_titulos_row_saldo.setText("Saldo: "+StringFunctions.getDoubleFormatado(ctr.getSaldo()));
+			
+			linear_listview_titulos.addView(mLinearView);
+			
+			total += ctr.getSaldo();
+		}
+		
+		textView_msg_aviso_titulos.setText("Existe "+StringFunctions.getDoubleFormatado(total)+" em título(s) em aberto para este cliente, você tem certeza que deseja utilizá-lo?");
+	}
+		
+}

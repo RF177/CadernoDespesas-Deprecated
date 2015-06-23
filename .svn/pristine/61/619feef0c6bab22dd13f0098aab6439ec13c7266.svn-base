@@ -1,0 +1,135 @@
+package br.com.simdata.forcavendas.view;
+
+import java.text.ParseException;
+
+import br.com.simdata.forcavendas.R;
+import br.com.simdata.forcavendas.dao.EmpresaDAO;
+import br.com.simdata.forcavendas.model.Empresa;
+import br.com.simdata.forcavendas.util.DataUtils;
+import br.com.simdata.forcavendas.util.Validation;
+import android.os.Bundle;
+import android.app.Activity;
+import android.content.Intent;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
+
+public class FormEmpresaActivity extends Activity {
+
+	EditText edit_empresa_nome, edit_empresa_id_empresa, edit_empresa_razao, edit_empresa_cnpj, edit_empresa_host_interno, edit_empresa_host_externo, edit_empresa_data_atual, edit_empresa_vendedor_codigo, edit_empresa_vendedor_nome, edit_empresa_vendedor_usuario, edit_empresa_vendedor_senha;
+	Button btn_form_empresa_salvar, btn_form_empresa_voltar;
+	Empresa empresa;	
+	EmpresaDAO empresaDAO = new EmpresaDAO(this);
+	
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.form_empresa);
+			
+		edit_empresa_id_empresa = (EditText) findViewById(R.id.edit_empresa_id_empresa);
+		edit_empresa_nome = (EditText) findViewById(R.id.edit_empresa_nome);		
+		edit_empresa_razao = (EditText) findViewById(R.id.edit_empresa_razao);
+		edit_empresa_cnpj = (EditText) findViewById(R.id.edit_empresa_cnpj);		
+		edit_empresa_host_interno = (EditText) findViewById(R.id.edit_empresa_host_interno);
+		edit_empresa_host_externo = (EditText) findViewById(R.id.edit_empresa_host_externo);
+		edit_empresa_data_atual = (EditText) findViewById(R.id.edit_empresa_data_atual);		
+		edit_empresa_vendedor_codigo = (EditText) findViewById(R.id.edit_empresa_vendedor_codigo);
+		edit_empresa_vendedor_nome = (EditText) findViewById(R.id.edit_empresa_vendedor_nome);
+		edit_empresa_vendedor_usuario = (EditText) findViewById(R.id.edit_empresa_vendedor_usuario);
+		edit_empresa_vendedor_senha = (EditText) findViewById(R.id.edit_empresa_vendedor_senha);
+		btn_form_empresa_salvar = (Button) findViewById(R.id.btn_form_empresa_salvar);
+		btn_form_empresa_voltar = (Button) findViewById(R.id.btn_form_empresa_voltar);
+		edit_empresa_nome.setFocusable(false);
+		edit_empresa_razao.setFocusable(false);
+		edit_empresa_cnpj.setFocusable(false);		
+		edit_empresa_vendedor_nome.setFocusable(false);
+		edit_empresa_data_atual.setFocusable(false);		
+		      	   
+        btn_form_empresa_salvar.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {				
+				if (checkValidation()) {
+					try {
+						submitForm();
+					} catch (ParseException e) {
+						Toast.makeText(FormEmpresaActivity.this, "ERRO!", Toast.LENGTH_LONG).show();
+						e.printStackTrace();
+					}
+				} else {
+					Toast.makeText(FormEmpresaActivity.this, "Dados informados inválidos!", Toast.LENGTH_LONG).show();
+				}							
+			}
+		});
+        
+        btn_form_empresa_voltar.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {				
+				Intent myIntent = new Intent(FormEmpresaActivity.this, MainActivity.class);
+				startActivity(myIntent);
+				finish();
+				return;						
+			}
+		});
+		
+        if(DadosSessao.getEmpresa() == null){//verifica se eh uma nova empresa        	
+        	empresa = new Empresa();
+        	empresa.setData_atual(DataUtils.getDateTimeBd("2001-01-01 01:01:01"));
+        	btn_form_empresa_voltar.setVisibility(View.INVISIBLE);
+        }else{
+        	empresa = DadosSessao.getEmpresa();
+        	empresaDAO.open();
+        	empresa = empresaDAO.getByid(empresa.getId());
+        	empresaDAO.close();
+        }
+		empresaToForm(empresa);
+	}
+		
+    private boolean checkValidation() {
+        boolean ret = true; 
+        if (!Validation.hasText(edit_empresa_id_empresa)) ret = false;
+        if (!Validation.hasText(edit_empresa_host_interno)) ret = false;
+        if (!Validation.hasText(edit_empresa_host_externo)) ret = false;
+        if (!Validation.hasText(edit_empresa_vendedor_codigo)) ret = false;
+        if (!Validation.hasText(edit_empresa_vendedor_usuario)) ret = false;
+        if (!Validation.hasText(edit_empresa_vendedor_senha)) ret = false;
+        return ret;
+    }  
+        
+    private void submitForm() throws ParseException {
+
+    	empresa.setId_empresa(Long.parseLong(edit_empresa_id_empresa.getText().toString()));    	
+    	empresa.setHost_interno(edit_empresa_host_interno.getText().toString());
+    	empresa.setHost_externo(edit_empresa_host_externo.getText().toString());    	    
+		empresa.setV_codigo(Long.parseLong(edit_empresa_vendedor_codigo.getText().toString()));
+		empresa.setV_usuario(edit_empresa_vendedor_usuario.getText().toString());
+		empresa.setV_senha(edit_empresa_vendedor_senha.getText().toString());	
+						 
+		empresaDAO.open();
+		if(empresa .getId() == null){		
+			empresaDAO.insert(empresa);
+		}else{		
+			empresaDAO.update(empresa);
+		}
+		empresaDAO.close();	
+		
+		DadosSessao.setEmpresa(empresa);
+		
+		//redireciona para tela principal
+    	Intent i = new Intent(FormEmpresaActivity.this, MainActivity.class);
+		startActivity(i);
+		finish();
+    }	
+        
+    private void empresaToForm(Empresa empresa){    	    
+    	edit_empresa_id_empresa.setText(empresa.getId_empresa() == null ? "" : String.valueOf(empresa.getId_empresa()));
+		edit_empresa_nome.setText(empresa.getNome());      		
+		edit_empresa_razao.setText(empresa.getRazao());
+		edit_empresa_cnpj.setText(empresa.getCnpj());
+		edit_empresa_host_interno.setText(empresa.getHost_interno()); 
+		edit_empresa_host_externo.setText(empresa.getHost_externo());
+		edit_empresa_data_atual.setText(DataUtils.setDateTimeBd(empresa.getData_atual()));   		
+		edit_empresa_vendedor_codigo.setText(empresa.getV_codigo() == null ? "" : String.valueOf(empresa.getV_codigo()));
+		edit_empresa_vendedor_nome.setText(empresa.getV_nome());  
+		edit_empresa_vendedor_usuario.setText(empresa.getV_usuario());
+		edit_empresa_vendedor_senha.setText(empresa.getV_senha());     	    	    
+    }    		   
+}

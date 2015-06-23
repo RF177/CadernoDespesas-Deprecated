@@ -1,0 +1,162 @@
+package br.com.simdata.forcavendas.model.venda;
+
+import java.util.Date;
+import java.util.List;
+
+public class Pedido {
+
+	private Long id_pedido;
+	private long id_empresa;
+	private long numero;
+	private String situacao; // Pendente Liberado Transmitido Cancelado Emitido
+	private long id_cliente; // fk
+	private long id_formapag; // fk
+	private long id_prazopag; // fk
+	private Date dtprevi_entrega;
+	private Date data;
+	private String tipo; // Venda, Bonificacao, Troca
+	private double descp;
+	private double descv;
+	private double tot_ped;
+	private String obs;
+	private List<PedidoItem> items;
+
+	public Pedido() {		
+		this.situacao = "P";//TODO
+	}
+
+	public Long getId_pedido() {
+		return id_pedido;
+	}
+
+	public void setId_pedido(Long id_pedido) {
+		this.id_pedido = id_pedido;
+	}
+
+	public long getId_empresa() {
+		return id_empresa;
+	}
+
+	public void setId_empresa(long id_empresa) {
+		this.id_empresa = id_empresa;
+	}
+
+	public long getNumero() {
+		return numero;
+	}
+
+	public void setNumero(long numero) {
+		this.numero = numero;
+	}
+
+	public String getSituacao() {
+		return situacao;
+	}
+	
+	public String getSituacaoDescricao() {			
+		if(this.situacao.equals("P")){
+			return "Pendente";
+		}else if(this.situacao.equals("L")){
+			return "Liberado";
+		}else if(this.situacao.equals("T")){
+			return "Transmitido";
+		}else if(this.situacao.equals("C")){
+			return "Cancelado";
+		}else{
+			return "Emitido";
+		}								
+	}
+	
+	public void setSituacao(String situacao) {
+		this.situacao = situacao;
+	}
+
+	public long getId_cliente() {
+		return id_cliente;
+	}
+
+	public void setId_cliente(long id_cliente) {
+		this.id_cliente = id_cliente;
+	}
+
+	public long getId_formapag() {
+		return id_formapag;
+	}
+
+	public void setId_formapag(long id_formapag) {
+		this.id_formapag = id_formapag;
+	}
+
+	public long getId_prazopag() {
+		return id_prazopag;
+	}
+
+	public void setId_prazopag(long id_prazopag) {
+		this.id_prazopag = id_prazopag;
+	}
+
+	public Date getDtprevi_entrega() {
+		return dtprevi_entrega;
+	}
+
+	public void setDtprevi_entrega(Date dtprevi_entrega) {
+		this.dtprevi_entrega = dtprevi_entrega;
+	}
+	
+	public Date getData() {
+		return data;
+	}
+
+	public void setData(Date data) {
+		this.data = data;
+	}
+
+	public String getTipo() {
+		return tipo;
+	}
+
+	public void setTipo(String tipo) {
+		this.tipo = tipo;
+	}
+
+	public double getDescp() {
+		return descp;
+	}
+
+	public void setDescp(double descp) {
+		this.descp = descp;		
+	}
+
+	public double getDescv() {
+		return descv;
+	}
+
+	public void setDescv(double descv) {
+		this.descv = descv;		
+	}
+
+	public String getObs() {
+		return obs;
+	}
+
+	public void setObs(String obs) {
+		this.obs = obs;
+	}
+
+	public List<PedidoItem> getItems() {
+		return items;
+	}
+
+	public void setItems(List<PedidoItem> items) {
+		this.items = items;
+	}
+
+	public double getTot_ped() {
+		return tot_ped;
+	}
+
+	public void setTot_ped(double tot_ped) {
+		this.tot_ped = tot_ped;
+	}
+
+}

@@ -1,0 +1,92 @@
+package br.com.simdata.forcavendas.dao;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import br.com.simdata.forcavendas.model.venda.PrazoPagamento;
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.Cursor;
+import android.database.SQLException;
+import android.database.sqlite.SQLiteDatabase;
+
+public class PrazoPagamentoDAO {
+ 
+    private SQLiteDatabase  database;
+    private DataBaseHandler dbHelper;
+ 
+    public PrazoPagamentoDAO(Context context) {
+        dbHelper = new DataBaseHandler(context);
+    }
+ 
+    public void open() throws SQLException {
+        database = dbHelper.getWritableDatabase();
+    }
+ 
+    public void close() {
+        dbHelper.close();
+    }
+
+    
+    public List<PrazoPagamento> ListAllEmpresa(int id_empresa) {
+        List<PrazoPagamento> prazoPagamentos = new ArrayList<PrazoPagamento>();
+ 
+        String selectQuery = "SELECT * FROM prazopagtos WHERE id_empresa = "+id_empresa+" ;" ;
+        Cursor cursor = database.rawQuery(selectQuery, null);
+        cursor.moveToFirst();
+        
+        while (!cursor.isAfterLast()) {
+        	PrazoPagamento prazoPagamento = cursorToEntity(cursor);
+        	prazoPagamentos.add(prazoPagamento);
+            cursor.moveToNext();
+        }
+        
+        cursor.close();//Tenha certeza que você fechou o cursor
+        return prazoPagamentos;    	
+    }    
+        
+    
+    public PrazoPagamento getByid(long id_prazopag){
+    	PrazoPagamento prazoPagamento = null;
+		String selectQuery = "SELECT * FROM prazopagtos WHERE id_prazopag="+id_prazopag;	
+    	Cursor cursor = database.rawQuery(selectQuery, null);
+    	if (cursor != null && cursor.getCount() > 0){
+    	    cursor.moveToFirst();    	    
+    	    prazoPagamento = cursorToEntity(cursor);     	                	 
+    	}
+    	cursor.close();    	
+    	return prazoPagamento;    	    	       	  
+    }    
+    
+            
+    public long insert(PrazoPagamento prazoPagamento) {      	 
+        return database.insert("prazopagtos", null, prazoPagamentoToContentValues(prazoPagamento));    
+    }     
+     
+    public int update(PrazoPagamento prazoPagamento) {     
+        return database.update("prazopagtos", prazoPagamentoToContentValues(prazoPagamento),"id_prazopag = " + prazoPagamento.getId_prazopag(), null);         
+    }
+     
+    public void delete(PrazoPagamento prazoPagamento) {              
+        database.delete("prazopagtos", "id_prazopag  = " + prazoPagamento.getId_prazopag(), null);
+    }
+            
+	private PrazoPagamento cursorToEntity(Cursor cursor) { 	
+		PrazoPagamento prazoPagamento = new PrazoPagamento();		
+		prazoPagamento.setId_prazopag(cursor.getLong(0));
+		prazoPagamento.setId_empresa(cursor.getLong(1));
+		prazoPagamento.setAtivo(cursor.getInt(2));
+		prazoPagamento.setDescricao(cursor.getString(3));	
+        return prazoPagamento;
+    }
+		
+	
+	private ContentValues prazoPagamentoToContentValues(PrazoPagamento prazoPagamento) {
+		ContentValues values = new ContentValues();
+		values.put("id_prazopag", prazoPagamento.getId_prazopag());
+		values.put("id_empresa", prazoPagamento.getId_empresa());
+		values.put("ativo", prazoPagamento.isAtivo());
+		values.put("descricao", prazoPagamento.getDescricao());		
+		return values;
+	}	
+}

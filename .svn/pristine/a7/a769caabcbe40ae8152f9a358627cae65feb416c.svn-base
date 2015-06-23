@@ -1,0 +1,73 @@
+package br.com.simdata.forcavendas.model.venda;
+
+import java.io.Serializable;
+
+public class FormaPagamento implements Serializable {
+	
+	private static final long serialVersionUID = 1L;
+
+	private Long id_formapag;
+	private long id_formapag_erp;
+	private long id_empresa;
+	private int ativo;
+	private String descricao;	
+
+	public FormaPagamento() {
+		super();		
+	}
+
+	public FormaPagamento(long id_formapag, long id_formapag_erp, long id_empresa, int ativo, String descricao) {
+		super();
+		this.id_formapag = id_formapag;
+		this.id_formapag_erp = id_formapag_erp;
+		this.id_empresa = id_empresa;
+		this.ativo = ativo;
+		this.descricao = descricao;
+	}
+
+	public Long getId_formapag() {
+		return id_formapag;
+	}
+
+	public void setId_formapag(Long id_formapag) {
+		this.id_formapag = id_formapag;
+	}
+
+	public long getId_empresa() {
+		return id_empresa;
+	}
+
+	public void setId_empresa(long id_empresa) {
+		this.id_empresa = id_empresa;
+	}
+
+	public String getDescricao() {
+		return descricao;
+	}
+
+	public void setDescricao(String descricao) {
+		this.descricao = descricao;
+	}
+	
+	public int getAtivo() {
+		return ativo;
+	}
+
+	public void setAtivo(int ativo) {
+		this.ativo = ativo;
+	}
+
+	public long getId_formapag_erp() {
+		return id_formapag_erp;
+	}
+
+	public void setId_formapag_erp(long id_formapag_erp) {
+		this.id_formapag_erp = id_formapag_erp;
+	}
+
+	//Aqui esta a mágica, sem este método você terá uma exceção - http://aqueleblogdeandroid.blogspot.com.br/2011/02/utilizando-spinner-com-objetos.html
+	public String toString() {  
+		return (this.getDescricao());  
+	}  	
+	
+}

@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:background="#CCCCCC"
+    android:gravity="clip_vertical" >
+
+    <LinearLayout
+        android:id="@+id/header"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:background="@layout/style_header"
+        android:orientation="horizontal"
+        android:paddingBottom="5dip"
+        android:paddingTop="5dip" >
+
+        <!-- Botao voltar -->
+        <Button
+            android:id="@+id/btn_list_pedidos_voltar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:layout_weight="0.05"
+            android:background="@layout/style_button_head"
+            android:minHeight="50dip"
+            android:text="@string/voltar"
+            android:textAlignment="center"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold" />
+
+        <!-- Separacao dos botoes superiores escrito 'Pedidos' -->
+        <TextView
+            android:id="@+id/textView2"
+            android:layout_width="128dp"
+            android:layout_height="44dp"
+            android:layout_marginTop="7dp"
+            android:layout_weight="0.07"
+            android:gravity="center_vertical|center_horizontal"
+            android:text="@string/pedidos"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <!-- Botao novo pedido -->
+        <Button
+            android:id="@+id/btn_list_pedidos_novo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:layout_weight="0.05"
+            android:background="@layout/style_button_head"
+            android:minHeight="50dip"
+            android:text="@string/novo"
+            android:textAlignment="center"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <ScrollView
+        android:id="@+id/scrollView1"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_below="@+id/header"
+        android:background="#CCCCCC"
+        android:fillViewport="true" >
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:focusableInTouchMode="true"
+            android:gravity="right" >
+		
+            <!-- Campo Filtro -->
+            <EditText
+                android:id="@+id/edit_list_pedido_pesquisa"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginTop="10dp"
+                android:background="@layout/style_edittext"
+                android:ems="10"
+                android:inputType="text"
+                android:singleLine="true" />
+            
+            <!-- Botao + (Filtro avancado) -->
+
+            <Button
+                android:id="@+id/btn_list_pedidos_filtroavancado"
+                style="android:buttonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignBottom="@+id/edit_list_pedido_pesquisa"
+                android:layout_alignRight="@+id/edit_list_pedido_pesquisa"
+                android:layout_alignTop="@+id/edit_list_pedido_pesquisa"
+                android:background="@layout/style_button"
+                android:text="@string/filtroavancado"
+                android:textColor="#FFFFFF"
+                android:width="50dp" />
+
+			<!-- Spinner Situacao -->
+            <Spinner
+                android:id="@+id/spinner_list_pedidos_situacao"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
+                android:layout_below="@+id/edit_list_pedido_pesquisa"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginTop="10dp"
+                android:background="@layout/style_button"
+                android:minHeight="50dip"
+                android:paddingLeft="10dp"
+                android:textColor="#FFFFFF" />
+
+            <!-- Botao Filtrar/pesquisar -->
+            <Button
+                android:id="@+id/btn_list_pedidos_pesquisa"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:layout_below="@+id/spinner_list_pedidos_situacao"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginTop="10dp"
+                android:background="@layout/style_button"
+                android:minHeight="50dip"
+                android:text="@string/pesquisa"
+                android:textAlignment="center"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold" />
+
+            <!-- Lista de pedidos -->
+            <LinearLayout
+                android:id="@+id/linear_listview_pedidos"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentLeft="true"
+                android:layout_below="@+id/btn_list_pedidos_pesquisa"
+                android:layout_marginTop="10dp"
+                android:orientation="vertical" />
+            
+        </RelativeLayout>
+
+    </ScrollView>
+
+</RelativeLayout>

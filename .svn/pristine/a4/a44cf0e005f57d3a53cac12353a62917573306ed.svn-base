@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+       
+    <string name="app_name">SimDataForcaVendas</string>   
+    <string name="head_configuracao">Configurações</string>
+    
+	<string name="login">Login</string>
+    <string name="entrar">Entrar</string>    
+    <string name="simdata">SimData</string>    
+    <string name="wwwsimdatacombr">www.simdata.com.br</string>
+    <string name="senha">Senha</string>
+    <string name="usuario">Usuário</string>
+       
+    <string name="gravar">Gravar</string>
+    <string name="salvar">Salvar</string>
+    <string name="pesquisa">Pesquisar</string>    
+    <string name="novo">Novo</string>
+    <string name="sair">Sair</string>
+    <string name="voltar">Voltar</string>
+    <string name="cfg">Config.</string>
+        
+	<string name="clientes">Clientes</string>
+    <string name="cliente">Cliente</string>
+    <string name="produtos">Produtos</string>
+    <string name="pedidos">Pedidos</string>  
+    <string name="pedido">Pedido</string>         
+    <string name="sincronizar">Sincronizar</string>
+        
+    <string name="codigo">Código</string>
+    <string name="codigo_vendedor">Código Vendedor</string>
+    <string name="id_empresa">Id Empresa</string>
+    <string name="nomerazao">Nome/Razão</string>
+    <string name="fatasia">Fantasia</string>
+    <string name="pessoa">Pessoa</string>
+    <string name="inscricao">Inscrição</string>
+    <string name="ddd">DDD</string>
+    <string name="telefone">Telefone</string>
+    <string name="email">Email</string>    
+    <string name="endereco">Endereço</string>
+    <string name="bairro">Bairro</string>    
+    <string name="municipio">Municipio</string>
+    <string name="estado">Estado</string>
+    <string name="cep">CEP</string>    
+    <string name="obs">Obs</string>
+    
+
+</resources>

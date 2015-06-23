@@ -1,0 +1,74 @@
+package br.com.simdata.forcavendas.model.cadastro;
+
+import java.io.Serializable;
+
+public class ProdutoPreco implements Serializable {
+
+	private static final long serialVersionUID = 1L;
+
+	private Long id_produto_preco;
+	private int id_produto;
+	private int id_tipo_preco;
+	private String descricao_tipo_preco;
+	private double vl_preco;
+	
+	public ProdutoPreco() {
+		super();
+	}
+		
+	public Long getId_produto_preco() {
+		return id_produto_preco;
+	}
+
+	public void setId_produto_preco(Long id_produto_preco) {
+		this.id_produto_preco = id_produto_preco;
+	}
+
+	public int getId_produto() {
+		return id_produto;
+	}
+
+	public void setId_produto(int id_produto) {
+		this.id_produto = id_produto;
+	}
+
+	public int getId_tipo_preco() {
+		return id_tipo_preco;
+	}
+
+	public void setId_tipo_preco(int id_tipo_preco) {
+		this.id_tipo_preco = id_tipo_preco;
+	}
+
+	public String getDescricao_tipo_preco() {
+		return descricao_tipo_preco;
+	}
+
+	public void setDescricao_tipo_preco(String descricao_tipo_preco) {
+		this.descricao_tipo_preco = descricao_tipo_preco;
+	}
+
+	public double getVl_preco() {
+		return vl_preco;
+	}
+
+	public void setVl_preco(double vl_preco) {
+		this.vl_preco = vl_preco;
+	}
+
+
+
+	
+	/**
+     * Utilizado para formatar as opções de preço
+     * 
+     * @param double numero (Ex.: '12.95')
+     * @return String formatada (Ex.: 'R$ 12,95') 
+    
+	public String getVl_precoFormatado() {	
+		return NumberFormat.getCurrencyInstance().format(vl_preco);		
+	}	
+    */
+
+	
+}

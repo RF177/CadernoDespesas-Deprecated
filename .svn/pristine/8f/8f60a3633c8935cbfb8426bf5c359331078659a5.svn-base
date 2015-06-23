@@ -1,0 +1,53 @@
+package br.com.simdata.forcavendas.model;
+
+public class Configuracao {
+
+	public int     id_cfg;	
+	public int     id_empresa;
+	public int     id_vendedor;	
+	
+	//public String  host;
+	//public String  localhost;	
+	//public String  login;
+	//public String  senha;
+	//public Date    sincronizacao;
+		
+	public Configuracao() {
+	}
+
+	public Configuracao(int id_cfg, int id_empresa, int id_vendedor) {
+		super();
+		this.id_cfg = id_cfg;
+		this.id_empresa = id_empresa;
+		this.id_vendedor = id_vendedor;
+	}
+
+	public int getId_cfg() {
+		return id_cfg;
+	}
+
+	public void setId_cfg(int id_cfg) {
+		this.id_cfg = id_cfg;
+	}
+
+	public int getId_empresa() {
+		return id_empresa;
+	}
+
+	public void setId_empresa(int id_empresa) {
+		this.id_empresa = id_empresa;
+	}
+
+	public int getId_vendedor() {
+		return id_vendedor;
+	}
+
+	public void setId_vendedor(int id_vendedor) {
+		this.id_vendedor = id_vendedor;
+	}
+
+	public static String getTableName(){
+		return "cfg";
+	}
+	
+}

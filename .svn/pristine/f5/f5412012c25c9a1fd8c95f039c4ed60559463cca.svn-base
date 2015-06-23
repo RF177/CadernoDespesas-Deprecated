@@ -1,0 +1,17 @@
+package br.com.simdata.forcavendas.view;
+
+import br.com.simdata.forcavendas.model.Empresa;
+
+public class DadosSessao {
+
+	private static Empresa empresa;
+
+	public static Empresa getEmpresa() {
+		return empresa;
+	}
+
+	public static void setEmpresa(Empresa empresa) {
+		DadosSessao.empresa = empresa;
+	};
+
+}

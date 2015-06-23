@@ -1,0 +1,124 @@
+package br.com.simdata.forcavendas.dao;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import br.com.simdata.forcavendas.model.cadastro.Cliente;
+import br.com.simdata.forcavendas.util.StringFunctions;
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.Cursor;
+import android.database.SQLException;
+import android.database.sqlite.SQLiteDatabase;
+
+public class ClienteDAO {
+ 
+    private SQLiteDatabase  database;
+    private DataBaseHandler dbHelper;
+ 
+    public ClienteDAO(Context context) {
+        dbHelper = new DataBaseHandler(context);
+    }
+ 
+    public void open() throws SQLException {
+        database = dbHelper.getWritableDatabase();
+    }
+ 
+    public void close() {
+        dbHelper.close();
+    }
+    
+    public List<Cliente> ListAll(String filtro) {
+        List<Cliente> clientes = new ArrayList<Cliente>();
+ 
+        String selectQuery = "";
+        if(filtro == null || filtro.equals("")){//Nao aplica filtros
+        	selectQuery = "SELECT * FROM clientes WHERE ativo = 1 ORDER BY razao LIMIT 25";
+        }else{//Aplica os filtros        	
+        	if(StringFunctions.isInteger(filtro)){//verifica se eh numerico		
+            	selectQuery = "SELECT * FROM clientes WHERE id_parceiro = "+filtro+" AND ativo = 1 ORDER BY razao LIMIT 25";
+        	}else{//Verifica pelo nome (razao)
+        		selectQuery = "SELECT * FROM clientes WHERE ativo = 1 AND razao LIKE '%"+StringFunctions.clearAccents(filtro.toUpperCase())+"%' ORDER BY razao LIMIT 25";
+        	}        	
+        }
+                
+        Cursor cursor = database.rawQuery(selectQuery, null);
+        cursor.moveToFirst();        
+        while (!cursor.isAfterLast()) {
+        	Cliente cliente = cursorToEntity(cursor);
+        	clientes.add(cliente);        	
+            cursor.moveToNext();
+        }        
+        cursor.close();//Tenha certeza que você fechou o cursor
+        
+        return clientes;    	
+    }    
+    
+    public Cliente getByidParceiro(long id_parceiro){
+    	Cliente cliente = null;
+		String selectQuery = "SELECT * FROM clientes WHERE id_parceiro="+id_parceiro;	
+    	Cursor cursor = database.rawQuery(selectQuery, null);
+    	if (cursor != null && cursor.getCount() > 0){
+    	    cursor.moveToFirst();    	    
+    	    cliente = cursorToEntity(cursor);     	                	 
+    	}
+    	cursor.close();    	
+    	return cliente;    	    	       	  
+    }    
+    
+            
+    public long insert(Cliente cliente) {      	 
+        return database.insert("clientes", null, clienteToContentValues(cliente));    
+    }     
+     
+    public int update(Cliente cliente) {       	
+        return database.update("clientes", clienteToContentValues(cliente),"id_parceiro="+cliente.getId_parceiro(), null);         
+    }
+     
+    public void delete(Cliente cliente) {              
+        database.delete("clientes", "id_parceiro="+cliente.getId_parceiro(), null);
+    }
+        
+    
+	private Cliente cursorToEntity(Cursor cursor) {    			
+		Cliente cliente = new Cliente();		
+		cliente.setId(cursor.getLong(0));
+    	cliente.setId_parceiro(cursor.getLong(1));
+    	cliente.setAtivo(cursor.getInt(2));
+    	cliente.setRazao(cursor.getString(3));
+    	cliente.setNome(cursor.getString(4));
+    	cliente.setPesso(cursor.getInt(5));
+    	cliente.setCgcpf(cursor.getString(6));
+    	cliente.setDdd(cursor.getInt(7)); 
+    	cliente.setTelef(cursor.getString(8));  
+    	cliente.setE_mail(cursor.getString(9));
+    	cliente.setEndereco(cursor.getString(10));
+    	cliente.setBairro(cursor.getString(11));   
+    	cliente.setMunicipio(cursor.getString(12));   
+    	cliente.setUf(cursor.getString(13));
+    	cliente.setCep(cursor.getString(14));
+    	cliente.setObs(cursor.getString(15));
+        return cliente;
+    }
+		
+	private ContentValues clienteToContentValues(Cliente cliente) {
+		ContentValues values = new ContentValues();
+		values.put("id", cliente.getId());
+		values.put("id_parceiro", cliente.getId_parceiro());
+		values.put("ativo", cliente.isAtivo());
+		values.put("razao", cliente.getRazao());
+		values.put("nome", cliente.getNome());
+		values.put("pesso", cliente.getPesso());
+		values.put("cgcpf", cliente.getCgcpf());
+		values.put("ddd", cliente.getDdd());
+		values.put("telef", cliente.getTelef());
+		values.put("e_mail", cliente.getE_mail());
+		values.put("endereco", cliente.getEndereco());
+		values.put("bairro", cliente.getBairro());
+		values.put("municipio", cliente.getMunicipio());
+		values.put("uf", cliente.getUf());
+		values.put("cep", cliente.getCep());
+		values.put("obs", cliente.getObs());
+		return values;
+	}	
+}

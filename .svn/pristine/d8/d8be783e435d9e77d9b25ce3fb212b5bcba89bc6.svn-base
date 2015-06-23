@@ -1,0 +1,124 @@
+package br.com.simdata.forcavendas.view;
+
+import java.text.ParseException;
+import java.util.ArrayList;
+
+import br.com.simdata.forcavendas.R;
+import br.com.simdata.forcavendas.dao.FormaPagamentoDAO;
+import br.com.simdata.forcavendas.dao.PrazoPagamentoDAO;
+import br.com.simdata.forcavendas.dao.ProdutoDAO;
+import br.com.simdata.forcavendas.model.cadastro.Produto;
+import br.com.simdata.forcavendas.model.venda.PedidoItem;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
+import android.app.Activity;
+import android.content.Intent;
+
+public class FormPedidoItemActivity extends Activity {
+		
+	public static PedidoItem pedidoItem;
+	
+	Button	  btn_form_pedido_item_voltar, btn_form_pedido_item_produto, btn_form_pedido_item_salvar, btn_form_pedido_item_excluir;
+	EditText edit_pedido_item_qtdade, edit_pedido_item_vl_unitario, edit_pedido_item_descontop;
+	boolean novo = false;
+	
+	ProdutoDAO produtoDAO = new ProdutoDAO(this);
+	FormaPagamentoDAO formaPagamentoDAO = new FormaPagamentoDAO(this);
+	PrazoPagamentoDAO prazoPagamentoDAO = new PrazoPagamentoDAO(this);
+	
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {	
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.form_pedido_item);
+
+		Intent intent = getIntent();		
+		String P_ID = intent.getStringExtra("ID");
+		if(P_ID != null){
+			novo = false;
+		}else{			
+			novo = true;				
+		}
+					
+		edit_pedido_item_qtdade = (EditText) findViewById(R.id.edit_pedido_item_qtdade);		
+		edit_pedido_item_vl_unitario = (EditText) findViewById(R.id.edit_pedido_item_vl_unitario);
+		edit_pedido_item_descontop = (EditText) findViewById(R.id.edit_pedido_item_descontop);		
+		btn_form_pedido_item_voltar = (Button)   findViewById(R.id.btn_form_pedido_item_voltar);
+		btn_form_pedido_item_produto   = (Button)   findViewById(R.id.btn_form_pedido_item_produto);
+		btn_form_pedido_item_salvar  = (Button)   findViewById(R.id.btn_form_pedido_item_salvar);
+		btn_form_pedido_item_excluir  = (Button)   findViewById(R.id.btn_form_pedido_item_excluir);		
+
+		btn_form_pedido_item_voltar.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {
+				Intent myIntent = new Intent(FormPedidoItemActivity.this, ListPedidoItemsActivity.class);
+				startActivity(myIntent);
+				finish();
+				return;
+			}
+		});
+				
+		btn_form_pedido_item_produto.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {			
+			}
+		});
+		
+		btn_form_pedido_item_salvar.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {
+				if (checkValidation()) {
+					try {
+						submitForm();
+					} catch (ParseException e) {
+						Toast.makeText(FormPedidoItemActivity.this, "ERRO!", Toast.LENGTH_LONG).show();
+						e.printStackTrace();
+					}
+				} else {
+					Toast.makeText(FormPedidoItemActivity.this, "Dados informados invalidos!", Toast.LENGTH_LONG).show();
+				}														
+			}
+		});
+
+		btn_form_pedido_item_excluir.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {	
+				return;
+			}
+		});
+				
+		pedidoItemToForm(pedidoItem);		
+	}
+	
+	private void pedidoItemToForm(PedidoItem pedidoItem){				
+		produtoDAO.open();
+		Produto produto = produtoDAO.getByid(pedidoItem.getId_produto());
+		produtoDAO.close();
+		btn_form_pedido_item_produto.setText(produto.getDescricao());
+		edit_pedido_item_qtdade.setText(pedidoItem.getQtd()+"");
+		edit_pedido_item_vl_unitario.setText(pedidoItem.getVl_unitario()+"");		
+	}
+		
+	 private boolean checkValidation() {
+	        boolean ret = true; 	    
+	        return ret;
+	 }    
+	 
+	 private void submitForm() throws ParseException {
+		 
+		    if(FormPedidoActivity.pedido.getItems() == null){
+		    	FormPedidoActivity.pedido.setItems(new ArrayList<PedidoItem>());
+		    }
+		 		 	
+			pedidoItem.setQtd(Double.parseDouble(edit_pedido_item_qtdade.getText().toString()));			
+			pedidoItem.setVl_unitario(Double.parseDouble(edit_pedido_item_qtdade.getText().toString()));
+			pedidoItem.setTotal(Double.parseDouble(edit_pedido_item_descontop.getText().toString()));	
+
+			if(!novo){
+				FormPedidoActivity.pedido.getItems().remove(FormPedidoActivity.pedido.getItems().indexOf(pedidoItem));//remove	
+			}	 
+	 		FormPedidoActivity.pedido.getItems().add(pedidoItem);		    	
+		    		    
+	    	Intent i = new Intent(FormPedidoItemActivity.this, ListPedidoItemsActivity.class);
+			startActivity(i);
+			finish();
+	 }
+}

@@ -1,0 +1,216 @@
+package br.com.simdata.forcavendas.view;
+
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.List;
+
+import br.com.simdata.forcavendas.R;
+import br.com.simdata.forcavendas.dao.ProdutoDAO;
+import br.com.simdata.forcavendas.dao.ProdutoPrecoDAO;
+import br.com.simdata.forcavendas.model.cadastro.Produto;
+import br.com.simdata.forcavendas.model.cadastro.ProdutoPreco;
+import br.com.simdata.forcavendas.model.venda.PedidoItem;
+import br.com.simdata.forcavendas.service.PedidoService;
+import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemSelectedListener;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Spinner;
+import android.widget.TextView;
+import android.widget.Toast;
+import android.app.Activity;
+import android.content.Intent;
+
+public class FormPedidoItemActivity extends Activity {
+		
+	public static PedidoItem pedidoItem;
+	public static List<PedidoItem> itemsRemovidos;
+	ProdutoDAO produtoDAO = new ProdutoDAO(this);
+	ProdutoPrecoDAO produtoPrecoDAO = new ProdutoPrecoDAO(this);
+	boolean novo = false;
+	
+	Button btn_form_pedido_item_voltar, btn_form_pedido_item_produto, btn_form_pedido_item_salvar, btn_form_pedido_item_excluir;
+	EditText edit_pedido_item_qtdade, edit_pedido_item_vl_unitario, edit_pedido_item_descontop;
+	TextView textView_pedido_item_total;
+	Spinner spinner_preco_item;
+	
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {	
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.form_pedido_item);
+		
+		if(getIntent().getStringExtra("EDITAR") != null){
+			novo = false; //Editar Item									
+		}else{ 					
+			novo = true; //Novo item			
+		}
+			
+		edit_pedido_item_qtdade = (EditText) findViewById(R.id.edit_pedido_item_qtdade);		
+		edit_pedido_item_vl_unitario = (EditText) findViewById(R.id.edit_pedido_item_vl_unitario);
+		edit_pedido_item_descontop = (EditText) findViewById(R.id.edit_pedido_item_descontop);		
+		btn_form_pedido_item_voltar = (Button) findViewById(R.id.btn_form_empresa_voltar);
+		btn_form_pedido_item_produto = (Button) findViewById(R.id.btn_form_pedido_item_produto);
+		btn_form_pedido_item_salvar = (Button) findViewById(R.id.btn_form_pedido_item_salvar);
+		btn_form_pedido_item_excluir = (Button) findViewById(R.id.btn_form_pedido_item_excluir);			
+		textView_pedido_item_total = (TextView) findViewById(R.id.textView_pedido_item_total);
+		
+		produtoPrecoDAO.open();
+		spinner_preco_item = (Spinner) findViewById(R.id.spinner_preco_item);								
+		ArrayAdapter<ProdutoPreco> precoAdapter = new ArrayAdapter<ProdutoPreco>(this, R.layout.spinner_item, produtoPrecoDAO.ListAllbyProduto(pedidoItem.getId_produto()));			
+		precoAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		spinner_preco_item.setAdapter(precoAdapter);
+		produtoPrecoDAO.close();
+		
+		btn_form_pedido_item_voltar.setOnClickListener(new View.OnClickListener() { //Botao Voltar
+			public void onClick(View v) {
+				Intent myIntent = new Intent(FormPedidoItemActivity.this, ListPedidoItemsActivity.class);
+				startActivity(myIntent);
+				finish();
+				return;
+			}
+		});
+				
+		btn_form_pedido_item_produto.setOnClickListener(new View.OnClickListener() {//Botao Produto
+			public void onClick(View v) {
+				/*
+				Intent intent = new Intent(FormPedidoItemActivity.this, ListProdutosActivity.class);	
+				intent.putExtra("SELECIONAR", "true");	
+				startActivity(intent);
+				finish();
+				return;
+				*/
+			}
+		});
+		
+		btn_form_pedido_item_salvar.setOnClickListener(new View.OnClickListener() {//Botao Salvar item
+			public void onClick(View v) {
+				try {
+					submitForm();
+				} catch (ParseException e) {
+					Toast.makeText(FormPedidoItemActivity.this, "ERRO!", Toast.LENGTH_LONG).show();
+					e.printStackTrace();
+				}																	
+			}
+		});
+		
+		if(novo){//Se for novo item nao aparece o botao excluir item
+			btn_form_pedido_item_excluir.setVisibility(View.INVISIBLE);//Esconde botao excluir item
+		}else{
+			btn_form_pedido_item_excluir.setOnClickListener(new View.OnClickListener() {//Botao Excluir item
+				public void onClick(View v) {					
+					for(PedidoItem item : FormPedidoActivity.pedido.getItems()){
+						if(item.getId() == pedidoItem.getId()){//Remove da lista e adiciona a lista de itens removidos para excluir							
+							if(itemsRemovidos == null){ itemsRemovidos = new ArrayList<PedidoItem>(); }
+							itemsRemovidos.add(item);//Add a lista para excluir
+							FormPedidoActivity.pedido.getItems().remove(item);//remove da lista						
+							break;
+						}				
+					}
+					
+					Intent i = new Intent(FormPedidoItemActivity.this, ListPedidoItemsActivity.class);
+					startActivity(i);
+					finish();				
+					return;
+				}
+			});
+		}		
+		
+		spinner_preco_item.setOnItemSelectedListener(new OnItemSelectedListener() {//ValueChange spinner de precos
+			public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+				ProdutoPreco produtoPreco = (ProdutoPreco) parent.getItemAtPosition(position);
+				pedidoItem.setVl_unitario(PedidoService.formataVerificaValor(produtoPreco.getVl_preco()));
+				edit_pedido_item_vl_unitario.setText(pedidoItem.getVl_unitario()+"");
+				textView_pedido_item_total.setText("Total: " +  PedidoService.CalculaTotalItem(pedidoItem) );
+			}
+			public void onNothingSelected(AdapterView<?> parent) { }		   
+		});		   
+		
+		edit_pedido_item_qtdade.addTextChangedListener(new TextWatcher() {//ValueChange quantidade	
+			public void afterTextChanged(Editable s) { }			 
+			public void beforeTextChanged(CharSequence s, int start, int count, int after) { }			 
+			public void onTextChanged(CharSequence s, int start, int before, int count) {
+				pedidoItem.setQtd(PedidoService.formataVerificaValor(s));
+				textView_pedido_item_total.setText("Total: " +  PedidoService.CalculaTotalItem(pedidoItem) );					
+			}			
+		});
+		
+		edit_pedido_item_vl_unitario.addTextChangedListener(new TextWatcher() {	//ValueChange valor unitario		
+			public void afterTextChanged(Editable s) { }			 
+			public void beforeTextChanged(CharSequence s, int start, int count, int after) { }			 
+			public void onTextChanged(CharSequence s, int start, int before, int count) {
+				pedidoItem.setVl_unitario(PedidoService.formataVerificaValor(s));
+				textView_pedido_item_total.setText("Total: " +  PedidoService.CalculaTotalItem(pedidoItem) );					
+			}			
+		});
+		
+		edit_pedido_item_descontop.addTextChangedListener(new TextWatcher() { //ValueChange desconto			
+			public void afterTextChanged(Editable s) { }			 
+			public void beforeTextChanged(CharSequence s, int start, int count, int after) { }			 
+			public void onTextChanged(CharSequence s, int start, int before, int count) {
+				pedidoItem.setDescp(PedidoService.formataVerificaValor(s));
+				textView_pedido_item_total.setText("Total: " +  PedidoService.CalculaTotalItem(pedidoItem) );					
+			}			
+		});
+			
+		pedidoItemToForm(pedidoItem);		
+	}
+	
+	@SuppressWarnings("rawtypes")
+	private void pedidoItemToForm(PedidoItem pedidoItem){				
+		produtoDAO.open();		
+		Produto produto = produtoDAO.getByid(pedidoItem.getId_produto());
+		produtoDAO.close();		
+		btn_form_pedido_item_produto.setText(produto.getCodigo()+" - "+produto.getDescricao());	
+		edit_pedido_item_qtdade.setText(pedidoItem.getQtd()+"");		
+		edit_pedido_item_vl_unitario.setText(pedidoItem.getVl_unitario()+"");
+		edit_pedido_item_descontop.setText(pedidoItem.getDescp()+"");				
+		textView_pedido_item_total.setText("Total: "+pedidoItem.getTotal());
+		
+		//Spinner do Preco do item
+		ArrayAdapter adapter_preco = (ArrayAdapter) spinner_preco_item.getAdapter();		
+		for (int position = 0; position < adapter_preco.getCount(); position++){		
+			ProdutoPreco produtoPreco = (ProdutoPreco) adapter_preco.getItem(position);				
+			if(produtoPreco.getVl_preco() == pedidoItem.getVl_unitario()){													
+				spinner_preco_item.setSelection(position);				
+				break; 
+			}
+		}
+			
+	}
+	 
+	private void submitForm() throws ParseException {		
+		if(FormPedidoActivity.pedido.getItems() == null){
+	    	FormPedidoActivity.pedido.setItems(new ArrayList<PedidoItem>());
+		}
+		
+		pedidoItem.setQtd(PedidoService.formataVerificaValor(edit_pedido_item_qtdade.getText()));			
+		pedidoItem.setVl_unitario(PedidoService.formataVerificaValor(edit_pedido_item_vl_unitario.getText()));
+		pedidoItem.setDescp(PedidoService.formataVerificaValor(edit_pedido_item_descontop.getText()));
+		pedidoItem.setTotal(PedidoService.CalculaTotalItem(pedidoItem));
+		
+		if(pedidoItem.getTotal() == 0.0){
+			Toast.makeText(FormPedidoItemActivity.this, "Total do Item com valor zerado, não foi possível adicionar ao pedido!", Toast.LENGTH_LONG).show();
+		}else{		
+			if(!novo){		
+				for(PedidoItem item : FormPedidoActivity.pedido.getItems()){
+					if(item.getId() == pedidoItem.getId()){
+						FormPedidoActivity.pedido.getItems().remove(item);//remove da lista para adicionar de novo
+						break;
+					}				
+				}			
+			}	
+					
+			FormPedidoActivity.pedido.getItems().add(pedidoItem);//Adiciona a lista de itens do pedido
+						    
+	    	Intent i = new Intent(FormPedidoItemActivity.this, ListPedidoItemsActivity.class);
+			startActivity(i);
+			finish();
+		}
+	}
+
+}

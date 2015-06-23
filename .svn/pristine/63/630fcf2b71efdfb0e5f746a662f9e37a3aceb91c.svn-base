@@ -1,0 +1,95 @@
+package br.com.simdata.forcavendas.model.cadastro;
+
+import java.io.Serializable;
+
+public class Produto implements Serializable {
+
+	private static final long serialVersionUID = 1L;
+
+	private Long id_produto;
+	private Long id_produto_erp;
+	private Long id_empresa;//id da empresa local
+	private int ativo;
+	private String codigo;		
+	private String descricao;
+	private String unidade;
+	private double qtdestoque;
+	private double preco;
+	
+	public Produto() {
+		super();		
+	}
+
+	public String getCodigo() {
+		return codigo;
+	}
+
+	public void setCodigo(String codigo) {
+		this.codigo = codigo;
+	}
+
+	public Long getId_produto() {
+		return id_produto;
+	}
+
+	public void setId_produto(Long id_produto) {
+		this.id_produto = id_produto;
+	}
+
+	public String getDescricao() {
+		return descricao;
+	}
+
+	public void setDescricao(String descricao) {
+		this.descricao = descricao;
+	}
+
+	public String getUnidade() {
+		return unidade;
+	}
+
+	public void setUnidade(String unidade) {
+		this.unidade = unidade;
+	}
+
+	public double getQtdestoque() {
+		return qtdestoque;
+	}
+
+	public void setQtdestoque(double qtdestoque) {
+		this.qtdestoque = qtdestoque;
+	}
+
+	public double getPreco() {
+		return preco;
+	}
+
+	public void setPreco(double preco) {
+		this.preco = preco;
+	}
+
+	public int getAtivo() {
+		return ativo;
+	}
+
+	public void setAtivo(int ativo) {
+		this.ativo = ativo;
+	}
+
+	public Long getId_empresa() {
+		return id_empresa;
+	}
+
+	public void setId_empresa(Long id_empresa) {
+		this.id_empresa = id_empresa;
+	}
+
+	public Long getId_produto_erp() {
+		return id_produto_erp;
+	}
+
+	public void setId_produto_erp(Long id_produto_erp) {
+		this.id_produto_erp = id_produto_erp;
+	}
+
+}

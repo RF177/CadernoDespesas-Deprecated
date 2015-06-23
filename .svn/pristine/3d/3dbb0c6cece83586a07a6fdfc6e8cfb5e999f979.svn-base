@@ -1,0 +1,99 @@
+package br.com.simdata.forcavendas.view;
+
+import br.com.simdata.forcavendas.R;
+import android.os.Bundle;
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.view.View;
+import android.widget.Button;
+
+public class MainActivity extends Activity {
+		
+	Button btn_main_sair, btn_main_clientes, btn_main_produtos, btn_main_pedidos, btn_main_sincronizar, btn_main_configuracao;
+	
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.main);
+		
+		btn_main_sair = (Button) findViewById(R.id.btn_main_sair); //Botao Sair			
+		btn_main_sair.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {
+				finish();
+				System.exit(0);
+			}
+		});		
+		
+		btn_main_clientes = (Button) findViewById(R.id.btn_main_clientes); //Botao Clientes		
+		btn_main_clientes.setOnClickListener(new View.OnClickListener() {	    	  
+	        public void onClick(View v) {
+	        	Intent i = new Intent(MainActivity.this, ListClientesActivity.class);
+	        	startActivity(i);	
+	        	finish();
+            }
+        });
+		
+		btn_main_produtos = (Button) findViewById(R.id.btn_main_produtos); //Botao Produtos		
+		btn_main_produtos.setOnClickListener(new View.OnClickListener() {	    	  
+	        public void onClick(View v) {	        	
+	        	Intent i = new Intent(MainActivity.this, ListProdutosActivity.class);
+	        	startActivity(i);	
+	        	finish();	        		        		       
+            }
+        });
+		
+		btn_main_pedidos = (Button) findViewById(R.id.btn_main_pedidos); //Botao pedidos			
+		btn_main_pedidos.setOnClickListener(new View.OnClickListener() {	    	  
+	        public void onClick(View v) {
+	        	Intent i = new Intent(MainActivity.this, ListPedidosActivity.class);
+	        	startActivity(i);	
+	        	finish();	 	        	
+            }
+        });		
+		
+		btn_main_sincronizar = (Button) findViewById(R.id.btn_main_sincronizar); //Botao Sincronizar			
+		btn_main_sincronizar.setOnClickListener(new View.OnClickListener() {	    	  
+	        public void onClick(View v) {	        	
+	        	Intent i = new Intent(MainActivity.this, FormSincronizacaoActivity.class);
+	        	startActivity(i);	
+	        	finish();	 	        	
+            }
+        });
+		
+		btn_main_configuracao = (Button) findViewById(R.id.btn_main_configuracao); //Botao Configuracoes			
+		btn_main_configuracao.setOnClickListener(new View.OnClickListener() {	    	  
+	        public void onClick(View v) {	        	
+	        	Intent i = new Intent(MainActivity.this, FormEmpresaActivity.class);
+	        	startActivity(i);	
+	        	finish();	 	        	
+            }
+        });	
+	}
+	
+	@Override
+    public void onBackPressed() {//Botao de voltar do android
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);   	 
+    	builder.setTitle("SimData");
+    	builder.setMessage("Você tem certeza que deseja sair do sistema?");
+    	     	 
+    	builder.setPositiveButton("Sim", new DialogInterface.OnClickListener() {    	
+    	    public void onClick(DialogInterface dialog, int which) {// Code that is executed when clicking YES    	        
+    	        dialog.dismiss();//Fecha dialog
+    	        sair();//Sai do app
+    	    }    	 
+    	});    	     	 
+    	builder.setNegativeButton("Não", new DialogInterface.OnClickListener() {
+    		public void onClick(DialogInterface dialog, int which) {// Code that is executed when clicking NO
+    			dialog.dismiss();//Fecha dialog
+    	    }    	 
+    	});
+        
+        AlertDialog alert = builder.create();
+    	alert.show();//Mostra dialog        
+    }
+	
+	public void sair(){//Sai do aplicativo
+		super.onBackPressed();//Executa metodo nativo do botao voltar do android
+	}
+}

@@ -1,0 +1,97 @@
+package br.com.simdata.forcavendas.dao;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import br.com.simdata.forcavendas.model.cadastro.ContaReceber;
+import br.com.simdata.forcavendas.util.DataUtils;
+import br.com.simdata.forcavendas.view.DadosSessao;
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.Cursor;
+import android.database.SQLException;
+import android.database.sqlite.SQLiteDatabase;
+
+public class ContaReceberDAO {
+ 
+    private SQLiteDatabase database;
+    private DataBaseHandler dbHelper;
+    
+    private long id_empresa = DadosSessao.getEmpresa().getId_empresa();
+ 
+    public ContaReceberDAO(Context context) {
+        dbHelper = new DataBaseHandler(context);
+    }
+ 
+    public void open() throws SQLException {
+        database = dbHelper.getWritableDatabase();
+    }
+ 
+    public void close() {
+        dbHelper.close();
+    }
+    
+    public List<ContaReceber> ListAllbyId_cliente(long id_cliente) {
+    	List<ContaReceber> contaRecebers = new ArrayList<ContaReceber>();
+        String selectQuery = "SELECT * FROM ctr WHERE id_cliente="+id_cliente+" AND id_empresa="+id_empresa+" ORDER BY vecto ";
+        Cursor cursor = database.rawQuery(selectQuery, null);
+        cursor.moveToFirst();
+        while (!cursor.isAfterLast()) {
+        	ContaReceber contaReceber = cursorToEntity(cursor);
+        	contaRecebers.add(contaReceber);
+            cursor.moveToNext();
+        }        
+        cursor.close();//Tenha certeza que você fechou o cursor
+        return contaRecebers;    	
+    } 
+    
+    public ContaReceber getById_ctr_erp(long id_ctr_erp){
+    	ContaReceber contaReceber = null;
+		String selectQuery = "SELECT * FROM ctr WHERE id_ctr_erp="+id_ctr_erp+" AND id_empresa="+id_empresa;
+    	Cursor cursor = database.rawQuery(selectQuery, null);
+    	if (cursor != null && cursor.getCount() > 0){
+    	    cursor.moveToFirst();    	    
+    	    contaReceber = cursorToEntity(cursor);     	                	 
+    	}
+    	cursor.close();    	
+    	return contaReceber;    	    	       	  
+    }  
+            
+    public long insert(ContaReceber contaReceber) {      	 
+        return database.insert("ctr", null, contaReceberToContentValues(contaReceber));    
+    }     
+     
+    public int update(ContaReceber contaReceber) {       	
+        return database.update("ctr", contaReceberToContentValues(contaReceber),"id_ctr="+contaReceber.getId_ctr()+" AND id_empresa="+id_empresa, null);         
+    }
+     
+    public void delete(ContaReceber contaReceber) {              
+        database.delete("ctr", "id_ctr="+contaReceber.getId_ctr()+" AND id_empresa="+id_empresa, null);
+    }
+            
+	private ContaReceber cursorToEntity(Cursor cursor) {    			
+		ContaReceber contaReceber = new ContaReceber();
+		contaReceber.setId_ctr(cursor.getLong(0));
+		contaReceber.setId_ctr_erp(cursor.getLong(1));
+		contaReceber.setId_empresa(cursor.getLong(2));
+		contaReceber.setId_cliente(cursor.getInt(3));
+		contaReceber.setNumero(cursor.getString(4));;
+		contaReceber.setEmiss(DataUtils.getDateBd(cursor.getString(5)));
+		contaReceber.setVecto(DataUtils.getDateBd(cursor.getString(6)));
+		contaReceber.setSaldo(cursor.getDouble(7));		
+        return contaReceber;
+    }
+    	
+	private ContentValues contaReceberToContentValues(ContaReceber contaReceber) {
+		ContentValues values = new ContentValues();
+		values.put("id_ctr", contaReceber.getId_ctr());
+		values.put("id_ctr_erp", contaReceber.getId_ctr_erp());
+		values.put("id_empresa", contaReceber.getId_empresa());
+		values.put("id_cliente", contaReceber.getId_cliente());
+		values.put("numero", contaReceber.getNumero());
+		values.put("emiss", DataUtils.setDateBd(contaReceber.getEmiss()));
+		values.put("vecto", DataUtils.setDateBd(contaReceber.getVecto()));
+		values.put("saldo", contaReceber.getSaldo());		
+		return values;
+	}	
+}

@@ -1,0 +1,243 @@
+package br.com.simdata.forcavendas.dao;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import br.com.simdata.forcavendas.model.venda.Pedido;
+import br.com.simdata.forcavendas.model.venda.PedidoItem;
+import br.com.simdata.forcavendas.util.DataUtils;
+import br.com.simdata.forcavendas.util.StringFunctions;
+import br.com.simdata.forcavendas.view.DadosSessao;
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.Cursor;
+import android.database.SQLException;
+import android.database.sqlite.SQLiteDatabase;
+ 
+public class PedidoDAO {
+ 
+    private SQLiteDatabase  database;
+    private DataBaseHandler dbHelper;
+    
+    private long id_empresa = DadosSessao.getEmpresa().getId_empresa();
+ 
+    public PedidoDAO(Context context) {
+        dbHelper = new DataBaseHandler(context);
+    }
+ 
+    public void open() throws SQLException {
+        database = dbHelper.getWritableDatabase();
+    }
+ 
+    public void close() {
+        dbHelper.close();
+    }
+    
+    public List<Pedido> ListAll(String filtro, String situacao) {
+        List<Pedido> pedidos = new ArrayList<Pedido>();
+        
+        String selectQuery = "";
+        if(filtro == null || filtro.equals("")){//Nao aplica filtros
+        	selectQuery = "SELECT * FROM pedidos WHERE situacao = '"+situacao+"' AND id_empresa="+id_empresa+" ORDER BY numero DESC LIMIT 20";
+        }else{//Aplica os filtros        	
+        	if(StringFunctions.isInteger(filtro)){//verifica se eh numerico		
+            	selectQuery = "SELECT * FROM pedidos WHERE numero = "+filtro+" AND situacao = '"+situacao+"' AND id_empresa="+id_empresa+" ORDER BY numero DESC LIMIT 20";
+        	}else{//Verifica pelo nome (razao do cliente)        		
+        		selectQuery = "SELECT * FROM pedidos a, clientes b WHERE a.id_cliente = b.id_parceiro AND situacao = '"+situacao+"' AND id_empresa="+id_empresa+" AND b.razao LIKE '%"+StringFunctions.clearAccents(filtro.toUpperCase())+"%' ORDER BY a.numero DESC LIMIT 20";
+        	}        	
+        }        
+        
+        Cursor cursor = database.rawQuery(selectQuery, null);
+        cursor.moveToFirst();
+        
+        while (!cursor.isAfterLast()) {
+        	Pedido pedido = cursorToEntity(cursor);
+        	pedidos.add(pedido);
+            cursor.moveToNext();
+        }
+        
+        cursor.close();//Tenha certeza que você fechou o cursor
+        return pedidos;    	
+    } 
+    
+    public List<Pedido> ListPedidosSituação(char situacao) {
+        List<Pedido> pedidos = new ArrayList<Pedido>();
+        
+        String selectQuery = "SELECT * FROM pedidos WHERE situacao='"+situacao+"' AND id_empresa="+id_empresa+" ORDER BY numero";
+        
+        Cursor cursor = database.rawQuery(selectQuery, null);
+        cursor.moveToFirst();
+        
+        while (!cursor.isAfterLast()) {
+        	Pedido pedido = cursorToEntity(cursor);
+        	pedidos.add(pedido);
+            cursor.moveToNext();
+        }
+        
+        cursor.close();//Tenha certeza que você fechou o cursor
+        return pedidos;    	
+    }  
+    
+    public Pedido getByid(int id){
+		String selectQuery = "SELECT * FROM pedidos WHERE id="+id+" AND id_empresa="+id_empresa;	
+    	Cursor cursor = database.rawQuery(selectQuery, null);
+    	if (cursor != null)
+    	    cursor.moveToFirst();
+
+    	Pedido pedido = cursorToEntity(cursor); 
+    	cursor.close();    
+
+    	pedido.setItems(getItensByidPedido(id));//Busca itens
+    	
+    	return pedido;
+    }
+    
+    public Pedido getByNumero(long numero_fv){
+    	Pedido pedido = null;
+    	String selectQuery = "SELECT * FROM pedidos WHERE numero="+numero_fv+" AND id_empresa="+id_empresa;
+		Cursor cursor = database.rawQuery(selectQuery, null);
+    	if (cursor != null){
+    	    cursor.moveToFirst();
+    	}
+    	
+    	if(cursor.getCount() != 0){
+    		pedido = cursorToEntity(cursor);
+    	}
+    	
+    	cursor.close(); 
+    	return pedido;
+    }
+    
+    public List<PedidoItem> getItensByidPedido(int id_pedido){
+    	List<PedidoItem> items = new ArrayList<PedidoItem>();
+		String selectQuery = "SELECT * FROM peditens WHERE id_pedido ="+id_pedido+" AND id_empresa="+id_empresa;	
+    	Cursor cursor = database.rawQuery(selectQuery, null);    	
+    	if (cursor != null && cursor.getCount() > 0){    	
+    		cursor.moveToFirst();    	
+	    	while (!cursor.isAfterLast()) {	    		   
+	    		items.add(itensCursorToEntity(cursor));
+	            cursor.moveToNext();
+	        }
+    	}
+    	
+    	cursor.close();     	
+    	return items;    	    	       	  
+    }
+      
+    
+    public long insert(Pedido pedido) {      	 
+    	return database.insert("pedidos", null, pedidoToContentValues(pedido));    	
+    }    
+    
+    public void update(Pedido pedido) {     
+    	database.update("pedidos", pedidoToContentValues(pedido), "id="+pedido.getId()+" AND id_empresa="+id_empresa, null);         	
+    }
+    
+    public void delete(Pedido pedido) {              
+        database.delete("pedidos", "id="+pedido.getId()+" AND id_empresa="+id_empresa, null);
+    }
+    
+    
+    
+    public long insertItem(PedidoItem item, long id_pedido) {      	 
+		item.setId_pedido(id_pedido);
+		return database.insert("peditens", null, itensToContentValues(item));
+    }
+    
+    public void updateItem(PedidoItem item) {     
+    	database.update("peditens", itensToContentValues(item), "id="+item.getId()+" AND id_empresa="+id_empresa, null);
+    }
+
+    public void deleteItem(PedidoItem item) {              
+        database.delete("peditens", "id="+item.getId()+" AND id_empresa="+id_empresa, null);
+    }
+    
+        
+    public long getNextNumero(long id_empresa){
+    	String selectQuery = "SELECT max(numero)+1 FROM pedidos WHERE id_empresa= "+id_empresa;
+    	Cursor cursor = database.rawQuery(selectQuery, null);
+    	if (cursor != null){
+    	    cursor.moveToFirst();
+    	}
+    	
+    	long id = cursor.getLong(0); 
+    	cursor.close();  
+    	
+    	if(id == 0){//Se for o primeiro pedido no android, pega o numero_fv do sistema simdata
+    		selectQuery = "SELECT (numeroped_inicial)+1 FROM empresa WHERE id_empresa="+id_empresa;	
+    		cursor = database.rawQuery(selectQuery, null);
+	    	if (cursor != null){
+	    		cursor.moveToFirst();
+	    	}
+	    	
+	    	id = cursor.getLong(0); 
+	    	cursor.close();
+    	}
+    	
+    	return id;
+    }
+          
+    
+	private Pedido cursorToEntity(Cursor cursor) {    			
+		Pedido pedido = new Pedido();	
+		pedido.setId(cursor.getLong(0));
+		pedido.setId_empresa(cursor.getLong(1));
+		pedido.setNumero(cursor.getLong(2));
+		pedido.setSituacao(cursor.getString(3)); 	
+		pedido.setId_cliente(cursor.getLong(4));
+		pedido.setId_formapag(cursor.getLong(5));
+		pedido.setId_prazopag(cursor.getLong(6));					
+		pedido.setDtprevi_entrega(DataUtils.getDateBd(cursor.getString(7)));	
+		pedido.setTipo(cursor.getString(8));
+		pedido.setDescp(cursor.getDouble(9));
+		pedido.setDescv(cursor.getDouble(10));
+		pedido.setTot_ped(cursor.getDouble(11));
+		pedido.setObs(cursor.getString(12));
+        return pedido;
+    }
+		
+	private ContentValues pedidoToContentValues(Pedido pedido) {
+		ContentValues values = new ContentValues();				
+		values.put("id",pedido.getId());
+		values.put("id_empresa",pedido.getId_empresa());
+		values.put("numero",pedido.getNumero());
+		values.put("situacao",pedido.getSituacao());
+		values.put("id_cliente",pedido.getId_cliente());
+		values.put("id_formapag",pedido.getId_formapag());
+		values.put("id_prazopag",pedido.getId_prazopag());		
+		values.put("dtprevi_entrega",DataUtils.setDateBd(pedido.getDtprevi_entrega()));		
+		values.put("tipo",pedido.getTipo());
+		values.put("descp",pedido.getDescp());
+		values.put("descv",pedido.getDescv());
+		values.put("tot_ped",pedido.getTot_ped());
+		values.put("obs",pedido.getObs());		
+		return values;
+	}	
+	
+	
+	private PedidoItem itensCursorToEntity(Cursor cursor) {
+		PedidoItem item = new PedidoItem();
+		item.setId(cursor.getLong(0));
+		item.setId_pedido(cursor.getLong(1));
+		item.setId_empresa(cursor.getLong(2));
+		item.setId_produto(cursor.getLong(3));
+		item.setQtd(cursor.getDouble(4));
+		item.setVl_unitario(cursor.getDouble(5));
+		item.setDescp(cursor.getDouble(6));
+		item.setTotal(cursor.getDouble(7));		
+		return item;		
+    }
+	
+	private ContentValues itensToContentValues(PedidoItem item) {
+		ContentValues values = new ContentValues();				
+		values.put("id",item.getId());
+		values.put("id_pedido",item.getId_pedido());
+		values.put("id_empresa",item.getId_empresa());
+		values.put("id_produto",item.getId_produto());
+		values.put("qtd",item.getQtd());
+		values.put("vl_unitario",item.getVl_unitario());
+		values.put("descp",item.getDescp());
+		values.put("total",item.getTotal());						
+		return values;
+	}
+}

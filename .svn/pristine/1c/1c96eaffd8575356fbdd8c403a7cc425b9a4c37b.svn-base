@@ -1,0 +1,114 @@
+package br.com.simdata.forcavendas.dao;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import br.com.simdata.forcavendas.model.cadastro.ProdutoPreco;
+import br.com.simdata.forcavendas.view.DadosSessao;
+import android.content.ContentValues;
+import android.content.Context;
+import android.database.Cursor;
+import android.database.SQLException;
+import android.database.sqlite.SQLiteDatabase;
+ 
+public class ProdutoPrecoDAO {
+ 
+    private SQLiteDatabase database;
+    private DataBaseHandler dbHelper;
+    
+    private long id_empresa = DadosSessao.getEmpresa().getId_empresa();
+ 
+    public ProdutoPrecoDAO(Context context) {
+        dbHelper = new DataBaseHandler(context);
+    }
+ 
+    public void open() throws SQLException {
+        database = dbHelper.getWritableDatabase();
+    }
+ 
+    public void close() {
+        dbHelper.close();
+    }
+    
+    public List<ProdutoPreco> ListAll() {
+        List<ProdutoPreco> produtoPrecos = new ArrayList<ProdutoPreco>();
+ 
+        String selectQuery = "SELECT * FROM produto_preco WHERE id_empresa="+id_empresa;
+        Cursor cursor = database.rawQuery(selectQuery, null);
+        cursor.moveToFirst();
+        
+        while (!cursor.isAfterLast()) {
+        	ProdutoPreco produtoPreco = cursorToEntity(cursor);
+        	produtoPrecos.add(produtoPreco);        	
+            cursor.moveToNext();
+        }
+        
+        cursor.close();//Tenha certeza que você fechou o cursor
+        return produtoPrecos;    	
+    } 
+    
+    public List<ProdutoPreco> ListAllbyProduto(long id_produto) {
+        List<ProdutoPreco> produtoPrecos = new ArrayList<ProdutoPreco>();
+ 
+        String selectQuery = "SELECT * FROM produto_preco WHERE id_produto="+id_produto+" AND id_empresa="+id_empresa;
+        Cursor cursor = database.rawQuery(selectQuery, null);
+        cursor.moveToFirst();
+        
+        while (!cursor.isAfterLast()) {
+        	ProdutoPreco produtoPreco = cursorToEntity(cursor);
+        	produtoPrecos.add(produtoPreco);        	
+            cursor.moveToNext();
+        }
+        
+        cursor.close();//Tenha certeza que você fechou o cursor
+        return produtoPrecos;    	
+    } 
+
+    public ProdutoPreco getById_produto_preco_erp(long id){
+    	ProdutoPreco produtoPreco = null;
+		String selectQuery = "SELECT * FROM produto_preco WHERE id_produto_preco_erp="+id+" AND id_empresa="+id_empresa;	
+    	Cursor cursor = database.rawQuery(selectQuery, null);
+    	if (cursor != null && cursor.getCount() > 0){
+    	    cursor.moveToFirst();    	    
+    	    produtoPreco = cursorToEntity(cursor);     	                	 
+    	}
+    	cursor.close();    	
+    	return produtoPreco;    	    	       	  
+    }    
+               
+    public long insert(ProdutoPreco produtoPreco) {      	 
+        return database.insert("produto_preco", null, produtoPrecoToContentValues(produtoPreco));    
+    }     
+     
+    public int update(ProdutoPreco produtoPreco) {     
+        return database.update("produto_preco", produtoPrecoToContentValues(produtoPreco),"id_produto_preco=" + produtoPreco.getId_produto_preco()+" AND id_empresa="+id_empresa, null);         
+    }
+     
+    public void delete(ProdutoPreco produtoPreco) {              
+        database.delete("produto_preco", "id_produto_preco="+produtoPreco.getId_produto_preco()+" AND id_empresa="+id_empresa, null);
+    }
+            
+	private ProdutoPreco cursorToEntity(Cursor cursor) {
+		ProdutoPreco produtoPreco = new ProdutoPreco();
+		produtoPreco.setId_produto_preco(cursor.getLong(0));
+		produtoPreco.setId_produto_preco_erp(cursor.getLong(1));
+		produtoPreco.setId_empresa(cursor.getLong(2));
+		produtoPreco.setId_produto(cursor.getInt(3));
+		produtoPreco.setId_tipo_preco(cursor.getInt(4));
+		produtoPreco.setDescricao_tipo_preco(cursor.getString(5));
+		produtoPreco.setVl_preco(cursor.getDouble(6));		
+		return produtoPreco;		
+    }		
+	
+	private ContentValues produtoPrecoToContentValues(ProdutoPreco produtoPreco) {
+		ContentValues values = new ContentValues();		
+		values.put("id_produto_preco", produtoPreco.getId_produto_preco());
+		values.put("id_produto_preco_erp", produtoPreco.getId_produto_preco_erp());
+		values.put("id_empresa", produtoPreco.getId_empresa());
+		values.put("id_produto", produtoPreco.getId_produto());		
+		values.put("id_tipo_preco", produtoPreco.getId_tipo_preco());
+		values.put("descricao_tipo_preco", produtoPreco.getDescricao_tipo_preco());
+		values.put("vl_preco", produtoPreco.getVl_preco());
+		return values;
+	}	
+}

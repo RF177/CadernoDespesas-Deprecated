@@ -1,0 +1,113 @@
+package br.com.simdata.forcavendas.view;
+
+import java.util.List;
+
+import br.com.simdata.forcavendas.R;
+import br.com.simdata.forcavendas.dao.ProdutoDAO;
+import br.com.simdata.forcavendas.dao.ProdutoEstoqueDAO;
+import br.com.simdata.forcavendas.dao.ProdutoPrecoDAO;
+import br.com.simdata.forcavendas.model.cadastro.Produto;
+import br.com.simdata.forcavendas.model.cadastro.ProdutoPreco;
+import br.com.simdata.forcavendas.util.StringFunctions;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Spinner;
+import android.widget.TextView;
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
+import android.content.Intent;
+
+public class FormProdutoActivity extends Activity {
+	
+	private ProdutoDAO produtoDAO = new ProdutoDAO(this);
+	private ProdutoPrecoDAO produtoPrecoDAO = new ProdutoPrecoDAO(this);
+	private ProdutoEstoqueDAO produtoEstoqueDAO = new ProdutoEstoqueDAO(this);
+	private Produto produto;	
+	
+	Button btn_form_produtos_voltar, btn_form_produtos_pedido, btn_form_produtos_salvar;		
+	Spinner spinner_produto_pesso, spinner_produto_estado;	
+	EditText edit_produto_codigo, edit_produto_descricao, edit_produto_unidade, edit_produto_estoque;
+	TextView textView_produto_precos;
+	
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {	
+		
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.form_produtos);
+		
+		edit_produto_codigo = (EditText) findViewById(R.id.edit_produto_codigo);
+		edit_produto_descricao = (EditText) findViewById(R.id.edit_produto_descricao);
+		edit_produto_unidade = (EditText) findViewById(R.id.edit_produto_unidade);
+		edit_produto_estoque = (EditText) findViewById(R.id.edit_produto_estoque);
+		textView_produto_precos = (TextView) findViewById(R.id.textView_produto_precos);				
+		btn_form_produtos_voltar = (Button) findViewById(R.id.btn_form_produtos_voltar);
+	
+		Intent intent = getIntent();	    
+	    String id = intent.getStringExtra("ID");	 	 		  		        		                   
+        if(id != null){
+    		produtoDAO.open();		
+    		produto = produtoDAO.getById_produto_erp(Integer.parseInt(id));
+    		produtoToForm(produto);        	
+        }
+     				               			
+		btn_form_produtos_voltar.setOnClickListener(new View.OnClickListener() { //Botao voltar
+			public void onClick(View v) {
+				Intent myIntent = new Intent(FormProdutoActivity.this, ListProdutosActivity.class);
+				startActivity(myIntent);
+				finish();
+				return;
+			}
+		});
+	}
+	
+	@Override
+    public void onBackPressed() {//Botao de voltar do android
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);   	 
+    	builder.setTitle("SimData");
+    	builder.setMessage("Você tem certeza que deseja sair do sistema?");
+    	     	 
+    	builder.setPositiveButton("Sim", new DialogInterface.OnClickListener() {    	
+    	    public void onClick(DialogInterface dialog, int which) {// Code that is executed when clicking YES    	        
+    	        dialog.dismiss();//Fecha dialog
+    	        sair();//Sai do app
+    	    }    	 
+    	});    	     	 
+    	builder.setNegativeButton("Não", new DialogInterface.OnClickListener() {
+    		public void onClick(DialogInterface dialog, int which) {// Code that is executed when clicking NO
+    			dialog.dismiss();//Fecha dialog
+    	    }    	 
+    	});
+        
+        AlertDialog alert = builder.create();
+    	alert.show();//Mostra dialog        
+    }
+	
+	public void sair(){//Sai do aplicativo
+		super.onBackPressed();//Executa metodo nativo do botao voltar do android
+	}
+	
+	private void produtoToForm(Produto produto){			
+		edit_produto_codigo.setText(produto.getCodigo());
+		edit_produto_descricao.setText(produto.getDescricao());
+		edit_produto_unidade.setText(produto.getUnidade());
+		edit_produto_estoque.setText(produto.getQtdestoque()+"");
+		
+		produtoPrecoDAO.open();
+		List<ProdutoPreco> produtoPrecos = produtoPrecoDAO.ListAllbyProduto(produto.getId_produto_erp());
+		produtoPrecoDAO.close();
+		String preco = "";		
+		for(ProdutoPreco produtoPreco : produtoPrecos){			
+			preco += produtoPreco.getDescricao_tipo_preco()+" - "+StringFunctions.getDoubleFormatado(produtoPreco.getVl_preco())+" \n";;			
+		}		
+		
+		produtoEstoqueDAO.open();
+		edit_produto_estoque.setText(produtoEstoqueDAO.getById_produto(produto.getId_produto_erp()).getQtd()+"");
+		produtoEstoqueDAO.close();
+		
+		textView_produto_precos.setText(preco);				
+	}			     
+	
+}

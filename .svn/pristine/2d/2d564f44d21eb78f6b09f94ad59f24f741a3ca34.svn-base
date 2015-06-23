@@ -1,0 +1,671 @@
+package br.com.simdata.forcavendas.view;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.List;
+
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.StatusLine;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.json.JSONArray;
+
+import br.com.simdata.forcavendas.R;
+import br.com.simdata.forcavendas.dao.ClienteDAO;
+import br.com.simdata.forcavendas.dao.EmpresaDAO;
+import br.com.simdata.forcavendas.dao.FormaPagamentoDAO;
+import br.com.simdata.forcavendas.dao.PrazoPagamentoDAO;
+import br.com.simdata.forcavendas.dao.ProdutoDAO;
+import br.com.simdata.forcavendas.dao.ProdutoPrecoDAO;
+import br.com.simdata.forcavendas.model.Empresa;
+import br.com.simdata.forcavendas.model.cadastro.Cliente;
+import br.com.simdata.forcavendas.model.cadastro.Produto;
+import br.com.simdata.forcavendas.model.cadastro.ProdutoPreco;
+import br.com.simdata.forcavendas.model.venda.FormaPagamento;
+import br.com.simdata.forcavendas.model.venda.PrazoPagamento;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.app.Activity;
+import android.app.ProgressDialog;
+import android.content.Intent;
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.RadioButton;
+import android.widget.TextView;
+
+public class FormSincronizacaoActivity extends Activity {
+	
+	Button btn_sincronizar_dados,btn_sincronizar_dados_voltar;
+	TextView edit_form_sincronizacao_status;
+	RadioButton radio_externo, radio_interno;
+	private int at_produtos, at_produtos_precos, at_clientes, at_formapag, at_prazopag;
+	
+	EmpresaDAO empresaDAO = new EmpresaDAO(this);
+	ProdutoDAO produtoDAO = new ProdutoDAO(this);
+	ClienteDAO clienteDAO = new ClienteDAO(this);	
+	ProdutoPrecoDAO produtoPrecoDAO = new ProdutoPrecoDAO(this);	
+	FormaPagamentoDAO formaPagamentoDAO = new FormaPagamentoDAO(this);
+	PrazoPagamentoDAO prazoPagamentoDAO = new PrazoPagamentoDAO(this);
+	
+	String dataAtual;
+	long id_empresa;
+	long id_vendedor;
+		
+	
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.form_sincronizacao);
+		edit_form_sincronizacao_status = (TextView) findViewById(R.id.edit_form_sincronizacao_status);
+		btn_sincronizar_dados = (Button) findViewById(R.id.btn_sincronizar_dados);
+		btn_sincronizar_dados_voltar = (Button) findViewById(R.id.btn_sincronizar_dados_voltar);
+		radio_externo = (RadioButton) findViewById(R.id.radio_externo);
+		radio_interno = (RadioButton) findViewById(R.id.radio_interno);	
+		
+		
+	    empresaDAO.open();        
+	    List<Empresa> empresas = empresaDAO.ListAll();      
+		if (empresas.size() == 1){
+			DadosSessao.setEmpresa(empresas.get(0));
+		}
+		empresaDAO.close();
+	    
+		
+		btn_sincronizar_dados.setOnClickListener(new View.OnClickListener() {//Botao Sincronizar
+			public void onClick(View v) {								
+				//new SincronizacaoTask().execute("http://192.168.0.55:8080/SimDataFVWebService/fvservices");								
+				if(radio_interno.isChecked()){//Sincronizacao Interna
+					new SincronizacaoTask().execute("http://"+DadosSessao.getEmpresa().getHost_interno());
+				}else if(radio_externo.isChecked()){//Sincronizacao Externa
+					new SincronizacaoTask().execute("http://"+DadosSessao.getEmpresa().getHost_externo());
+				}							
+			}
+		});
+		
+		btn_sincronizar_dados_voltar.setOnClickListener(new View.OnClickListener() {//Botao voltar
+			public void onClick(View v) {
+				Intent myIntent = new Intent(FormSincronizacaoActivity.this, MainActivity.class);
+				startActivity(myIntent);
+				finish();
+				return;
+			}
+		});	
+				
+		id_empresa  = DadosSessao.getEmpresa().getId_empresa();
+		id_vendedor = DadosSessao.getEmpresa().getV_codigo();		
+	}
+	
+	
+	/**
+	 * Rotina executa a atualizacao dentro de uma AsyncTask
+	 * @author rafael
+	 */
+	private class SincronizacaoTask extends AsyncTask<String, Integer, String> {
+						
+		private ProgressDialog Dialog = new ProgressDialog(FormSincronizacaoActivity.this);
+						
+		protected void onPreExecute() {
+			Dialog.setTitle("Sincronizando...");
+			Dialog.setMessage("Sincronizando Aguarde...");
+			Dialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+			Dialog.setProgress(0);
+			Dialog.setMax(100);
+			Dialog.show();
+		}			
+				
+        protected String doInBackground(String... urls) {
+
+    		empresaDAO.open();
+    		dataAtual = empresaDAO.getDataAtualByEmpresa((long) 1).replaceAll(" ", "%20");//remove os espacos em branco   TODO
+    		empresaDAO.close();	
+        	        	    		
+    		atualizaEmpresa(urls[0]);
+    		publishProgress(1);
+    		
+    		atualizaClientes(urls[0]);
+    		publishProgress(2);
+    		
+    		atualizaProdutos(urls[0]); 
+    		publishProgress(3);
+    		
+        	atualizaPrecosProdutos(urls[0]);
+        	publishProgress(4);
+        	
+        	atualizaFormaPagamentos(urls[0]);
+        	publishProgress(5);
+        	
+        	atualizaPrazoPagamentos(urls[0]);
+        	publishProgress(6);
+        	        
+        	return "FIM";
+        }
+                
+        protected void onProgressUpdate(Integer... progress) {        	
+        	Dialog.incrementProgressBy(15);
+        	if(progress[0] == 1){
+        		Dialog.setMessage("Atualizando Empresa");
+        	}else if(progress[0] == 2){
+        		Dialog.setMessage("Atualizando Clientes");
+        	}else if(progress[0] == 3){
+        		Dialog.setMessage("Atualizando Produtos");
+        	}else if(progress[0] == 4){
+        		Dialog.setMessage("Atualizando Preços");
+        	}else if(progress[0] == 5){
+        		Dialog.setMessage("Atualizando Formas de Pagtos");
+        	}else if(progress[0] == 6){
+        		Dialog.setMessage("Atualizando Prazo de Pagtos");
+        	}
+        }
+                      
+        protected void onPostExecute(String result) {
+        	
+        	//atualiza o data de atualizacao no cadastro da empresa
+           	empresaDAO.open();
+    	    empresaDAO.updateDataAtual((long) 1);
+    	    empresaDAO.close();
+        	
+        	//Apresenta na tela
+    	    String resultado =  "Produtos Atualizados: "+at_produtos+ "\n";
+    	    	   resultado += "Preços Atualizados: "+at_produtos_precos+ "\n";
+    	           resultado += "Clientes Atualizados: "+at_clientes+ "\n";
+    	           resultado += "Forma Pagtos. Atualizadas: "+at_formapag+ "\n";
+    	           resultado += "Prazo Pagtos. Atualizados: "+at_prazopag+ "\n";
+    	           
+        	edit_form_sincronizacao_status.setText(resultado);
+        	//fireBody.setText(Html.fromHtml("testing<br>line<\br>")      	
+        	
+        	at_produtos = 0;
+        	at_produtos_precos = 0;
+        	at_clientes = 0;
+        	at_formapag = 0;
+        	at_prazopag = 0;
+        	
+        	Log.i("result: ", result);        
+        	Dialog.dismiss();	            
+        }
+    }	
+	
+	
+	
+	/**
+	 * Realiza a leitura do JSON do webservice
+	 * 
+	 * @param URL
+	 * @return
+	 */
+	public String readJSON(String URL) {
+        StringBuilder stringBuilder = new StringBuilder();
+        HttpClient httpClient = new DefaultHttpClient();
+        HttpGet httpGet = new HttpGet(URL);
+        try {
+            HttpResponse response = httpClient.execute(httpGet);
+            StatusLine statusLine = response.getStatusLine();
+            int statusCode = statusLine.getStatusCode();
+            if (statusCode == 200) {
+                HttpEntity entity = response.getEntity();
+                InputStream inputStream = entity.getContent();
+                BufferedReader reader = new BufferedReader(
+                        new InputStreamReader(inputStream));
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    stringBuilder.append(line);
+                }
+                inputStream.close();
+            } else {
+                Log.d("JSON", "Failed to download file");
+            }
+        } catch (Exception e) {
+            Log.d("readJSONFeed", e.getLocalizedMessage());
+        }        
+        return stringBuilder.toString();
+    }
+	
+	
+	
+	/**
+	 * Envia JSONArray para o webservice
+	 * 
+	 * @param URL
+	 * @return resultado
+	 */
+	public String sendJSONPOST(String URL,List<Object> objects){
+         
+		String result = "";
+        try {                 	
+            HttpClient httpclient = new DefaultHttpClient();// create HttpClient             
+            HttpPost httpPost = new HttpPost(URL);//make POST request to the given URL
+ 
+            //build jsonObject  
+            //JSONObject jsonObject = new JSONObject();
+            //jsonObject.accumulate("name", person.getName());
+            //jsonObject.accumulate("country", person.getCountry());
+            //jsonObject.accumulate("twitter", person.getTwitter());              
+            //String json = jsonObject.toString();//convert JSONObject to JSON to String
+                        
+            //build jsonObjectArray  
+            JSONArray jsonObjectArray = new JSONArray();
+            for(Object object : objects){
+            	jsonObjectArray.put(object);	
+            }  
+            String jsonArray = jsonObjectArray.toString();//convert jsonObjectArray to JSON to String
+                                          
+            // ** Alternative way to convert Person object to JSON string usin Jackson Lib
+            // ObjectMapper mapper = new ObjectMapper();
+            // json = mapper.writeValueAsString(person);
+              
+            //StringEntity se = new StringEntity(json);//set json to StringEntity  
+            StringEntity se = new StringEntity(jsonArray);//set json to StringEntity
+            httpPost.setEntity(se);//set httpPost Entity    
+ 
+            // Set some headers to inform server about the type of the content   
+            httpPost.setHeader("Accept", "application/json");
+            httpPost.setHeader("Content-type", "application/json");
+ 
+            // Execute POST request to the given URL
+            HttpResponse httpResponse = httpclient.execute(httpPost);
+ 
+            // receive response as inputStream
+            InputStream inputStream = httpResponse.getEntity().getContent();
+ 
+            // convert inputstream to string            
+            if(inputStream != null){
+                result = convertInputStreamToString(inputStream);
+            }else{
+                result = "Did not work!";
+            }
+ 
+        } catch (Exception e) {
+            Log.d("InputStream", e.getLocalizedMessage());
+        }
+ 
+        return result;		
+	}		
+	
+    private static String convertInputStreamToString(InputStream inputStream) throws IOException{
+        BufferedReader bufferedReader = new BufferedReader( new InputStreamReader(inputStream));
+        String line = "";
+        String result = "";
+        while((line = bufferedReader.readLine()) != null)
+            result += line;
+ 
+        inputStream.close();
+        return result; 
+    }
+    
+    
+    public void atualizaEmpresa(String url){
+            	    	                                       
+        String empresaJSON  = readJSON(url+"/empresa/info/"+id_empresa+"/"+id_vendedor);        
+        empresaDAO.open();
+    	try { 	     		                           	
+    		JSONObject jsonObject = new JSONObject(empresaJSON);
+    		    	
+    		Empresa empresa = empresaDAO.getByid(DadosSessao.getEmpresa().getId());    	 		    		   
+    		empresa.setNome(jsonObject.getString("nome"));
+    		empresa.setRazao(jsonObject.getString("razao"));
+    		empresa.setCnpj(jsonObject.getString("cnpj"));
+	        empresa.setV_nome(jsonObject.getString("v_nome"));        	       
+	        empresaDAO.update(empresa);//atualiza	    
+	        DadosSessao.setEmpresa(empresa);
+	        
+        } catch (Exception e) {
+            Log.d("ReadPlacesFeedTask", e.getLocalizedMessage());                
+        }finally {
+        	empresaDAO.close();        	
+        }
+    }	
+	    
+    
+    
+	public void atualizaProdutos(String url){
+
+        String produtosJSON  = readJSON(url+"/produto/listar/"+id_empresa+"/"+id_vendedor+"/"+dataAtual);
+    	               
+        produtoDAO.open();
+    	try { 	     		           
+           JSONArray produtosItems = new JSONArray(produtosJSON);                            
+           for (int i = 0; i < produtosItems.length(); i++) {            
+                Produto produto = JSONObjectToProduto(produtosItems.getJSONObject(i));           
+                if(produtoDAO.getByid(produto.getId_produto()) == null){                	               
+                	produtoDAO.insert(produto);//insere
+                }else{                           
+                	produtoDAO.update(produto);//atualiza
+                }  
+                at_produtos ++;
+            }
+        } catch (Exception e) {
+            Log.d("ReadPlacesFeedTask", e.getLocalizedMessage());       
+        }finally {
+        	produtoDAO.close();        	
+        }
+    }
+	
+	
+	
+	public void atualizaPrecosProdutos(String url){
+
+        String precosProdutosJSON  = readJSON(url+"/produtopreco/listar/"+id_empresa+"/"+id_vendedor+"/"+dataAtual);
+    	           
+        produtoPrecoDAO.open();
+    	try { 	     		           
+           JSONArray precosProdutosItems = new JSONArray(precosProdutosJSON);                            
+           for (int i = 0; i < precosProdutosItems.length(); i++) {     
+        	   ProdutoPreco produtoPreco = JSONObjectToProdutoPreco(precosProdutosItems.getJSONObject(i));
+                
+               if(produtoPrecoDAO.getByid(produtoPreco.getId_produto_preco()) == null){                	               
+            	   produtoPrecoDAO.insert(produtoPreco);//insere
+               }else{                           
+            	   produtoPrecoDAO.update(produtoPreco);//atualiza
+               }  
+               at_produtos_precos++;
+        
+            }
+        } catch (Exception e) {
+            Log.d("ReadPlacesFeedTask", e.getLocalizedMessage());       
+        }finally {
+        	produtoPrecoDAO.close();        	
+        }
+    }
+	
+		
+	
+	public void atualizaClientes(String url){
+    	          		
+		Log.v("url", url+"/cliente/listar/"+id_empresa+"/"+id_vendedor+"/"+dataAtual);
+		
+        String produtosJSON  = readJSON(url+"/cliente/listar/"+id_empresa+"/"+id_vendedor+"/"+dataAtual);
+		
+        clienteDAO.open();
+    	try { 	     		           
+           JSONArray clientesItems = new JSONArray(produtosJSON);           
+           for (int i = 0; i < clientesItems.length(); i++) {
+        	           	        	  
+                Cliente cliente = JSONObjectToCliente(clientesItems.getJSONObject(i));            
+                if(clienteDAO.getByidParceiro(cliente.getId_parceiro()) == null){                	               
+                	clienteDAO.insert(cliente);//insere              
+                }else{                
+                	clienteDAO.update(cliente);//atualiza
+                }  
+                at_clientes ++;
+            }
+        } catch (Exception e) {
+            Log.d("ReadPlacesFeedTask", e.getLocalizedMessage());                
+        }finally {
+        	clienteDAO.close();        	
+        }
+    }	
+	
+	
+	
+	public void atualizaFormaPagamentos(String url){
+        
+        String produtosJSON  = readJSON(url+"/formapagto/listar/"+id_empresa+"/"+id_vendedor+"/"+dataAtual);
+        
+        formaPagamentoDAO.open();
+    	try { 	     		           
+           JSONArray formaPagamentoItems = new JSONArray(produtosJSON);           
+           for (int i = 0; i < formaPagamentoItems.length(); i++) {
+        	           	        	  
+                FormaPagamento formaPagamento = JSONObjectToFormaPagamento(formaPagamentoItems.getJSONObject(i));            
+                if(formaPagamentoDAO.getByid(formaPagamento.getId_formapag()) == null){                	               
+                	formaPagamentoDAO.insert(formaPagamento);//insere              
+                }else{                
+                	formaPagamentoDAO.update(formaPagamento);//atualiza
+                }  
+                at_formapag ++;
+            }
+        } catch (Exception e) {
+            Log.d("ReadPlacesFeedTask", e.getLocalizedMessage());        
+        }finally {
+        	formaPagamentoDAO.close();        	
+        }
+    }
+	
+	
+	public void atualizaPrazoPagamentos(String url){
+        
+        String produtosJSON  = readJSON(url+"/prazopagto/listar/"+id_empresa+"/"+id_vendedor+"/"+dataAtual);
+        
+        prazoPagamentoDAO.open();
+    	try { 	     		           
+           JSONArray prazoPagamentoItems = new JSONArray(produtosJSON);
+
+           for (int i = 0; i < prazoPagamentoItems.length(); i++) {
+        	           	   
+                PrazoPagamento prazoPagamento = JSONObjectToPrazoPagamento(prazoPagamentoItems.getJSONObject(i));            
+                if(prazoPagamentoDAO.getByid(prazoPagamento.getId_prazopag()) == null){                
+                	prazoPagamentoDAO.insert(prazoPagamento);//insere                	 
+                }else{                                	
+                	prazoPagamentoDAO.update(prazoPagamento);//atualiza
+                }  
+                at_prazopag ++;
+            }
+        } catch (Exception e) {
+            Log.d("ReadPlacesFeedTask", e.getLocalizedMessage());                
+        }finally {
+        	prazoPagamentoDAO.close();        	
+        }
+    }
+
+
+	
+    public Produto JSONObjectToProduto(JSONObject jsonObject) throws JSONException{    	
+    	Produto produto = new Produto();
+    	produto.setId_produto(jsonObject.getLong("id_produto"));
+    	produto.setCodigo(jsonObject.getString("codigo"));
+    	produto.setDescricao(jsonObject.getString("descricao"));
+    	produto.setUnidade(jsonObject.getString("unidade"));
+    	produto.setQtdestoque(0.0);//TODO vai ser em tabela separada
+    	produto.setPreco(0.0);//TODO vai ser em tabela separada    	  
+    	return produto;
+    }
+    
+    public ProdutoPreco JSONObjectToProdutoPreco(JSONObject jsonObject) throws JSONException{   
+    	ProdutoPreco produtoPreco = new ProdutoPreco();    	
+    	produtoPreco.setId_produto_preco(jsonObject.getLong("id_produto_preco"));
+    	produtoPreco.setId_produto(jsonObject.getInt("id_produto"));
+    	produtoPreco.setId_tipo_preco(jsonObject.getInt("id_tipo_preco"));
+    	produtoPreco.setDescricao_tipo_preco(jsonObject.getString("descricao_tipo_preco"));
+    	produtoPreco.setVl_preco(jsonObject.getDouble("vl_preco"));    	
+    	return produtoPreco;
+    }
+        
+    public Cliente JSONObjectToCliente(JSONObject jsonObject) throws JSONException{    	
+    	Cliente cliente = new Cliente(); 	          	
+    	cliente.setId_parceiro(jsonObject.getLong("id_parceiro"));
+    	cliente.setRazao(jsonObject.getString("razao"));
+    	cliente.setNome(jsonObject.getString("nome"));
+    	cliente.setPesso(jsonObject.getInt("pesso"));
+    	cliente.setCgcpf(jsonObject.getString("cgcpf"));
+    	cliente.setDdd(jsonObject.getInt("ddd"));
+    	cliente.setTelef(jsonObject.getString("telef") != null ? jsonObject.getString("telef") : "");	
+    	cliente.setE_mail(jsonObject.getString("e_mail"));		
+    	cliente.setEndereco(jsonObject.getString("endereco"));	
+    	cliente.setBairro(jsonObject.getString("bairro"));	
+    	cliente.setMunicipio(jsonObject.getString("municipio"));
+    	cliente.setUf(jsonObject.getString("uf"));
+    	cliente.setCep(jsonObject.getString("cep"));
+    	cliente.setObs(jsonObject.getString("obs"));    	    	
+    	return cliente;
+    }
+        
+    public FormaPagamento JSONObjectToFormaPagamento(JSONObject jsonObject) throws JSONException{    	
+    	FormaPagamento formaPagamento = new FormaPagamento();    	    
+    	formaPagamento.setId_formapag(jsonObject.getLong("id_formapag"));
+    	formaPagamento.setId_empresa(jsonObject.getLong("id_empresa"));
+    	formaPagamento.setAtiva(jsonObject.getBoolean("ativa") == true ?  1 : 0);
+    	formaPagamento.setDescricao(jsonObject.getString("descricao"));
+    	return formaPagamento;    	
+    }    
+    
+    public PrazoPagamento JSONObjectToPrazoPagamento(JSONObject jsonObject) throws JSONException{    	
+    	PrazoPagamento prazoPagamento = new PrazoPagamento();    	
+    	prazoPagamento.setId_prazopag(jsonObject.getLong("id_prazopag"));    
+    	prazoPagamento.setId_empresa(jsonObject.getLong("id_empresa"));    
+    	prazoPagamento.setAtivo(jsonObject.getBoolean("ativo") == true ?  1 : 0);    
+    	prazoPagamento.setDescricao(jsonObject.getString("descricao"));    	
+    	return prazoPagamento;    	
+    }
+    
+
+	/*
+	 //String serverURL =  "http://androidexample.com/media/webservice/JsonReturn.php";	
+
+	// Class with extends AsyncTask class
+	private class LongOperation extends AsyncTask<String, Void, Void> {
+
+		// Required initialization
+		private final HttpClient Client = new DefaultHttpClient();
+		private String Content;
+		private String Error = null;
+		private ProgressDialog Dialog = new ProgressDialog(FormSincronizacaoActivity.this);
+		String data = "";
+		TextView uiUpdate = (TextView) findViewById(R.id.output);
+		TextView jsonParsed = (TextView) findViewById(R.id.jsonParsed);
+		int sizeData = 0;
+		//EditText serverText = (EditText) findViewById(R.id.serverText);
+
+		protected void onPreExecute() {
+			// NOTE: You can call UI Element here.
+			// Start Progress Dialog (Message)
+
+			Dialog.setMessage("Please wait..");
+			Dialog.show();
+
+			try {				
+				//data += "&" + URLEncoder.encode("data", "UTF-8") + "=" + serverText.getText();// Set Request parameter
+				data += "&" + URLEncoder.encode("data", "UTF-8") + "=nada";// Set Request parameter
+			} catch (UnsupportedEncodingException e) {
+				e.printStackTrace();
+			}
+
+		}
+
+		// Call after onPreExecute method
+		protected Void doInBackground(String... urls) {
+
+			//************ Make Post Call To Web Server ***********
+			BufferedReader reader = null;
+
+			// Send data
+			try {
+
+				// Defined URL where to send data
+				URL url = new URL(urls[0]);
+
+				// Send POST data request
+
+				URLConnection conn = url.openConnection();
+				conn.setDoOutput(true);
+				OutputStreamWriter wr = new OutputStreamWriter(conn.getOutputStream());
+				wr.write(data);
+				wr.flush();
+
+				// Get the server response
+
+				reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+				StringBuilder sb = new StringBuilder();
+				String line = null;
+
+				// Read Server Response
+				while ((line = reader.readLine()) != null) {
+					// Append server response in string
+					sb.append(line + "\n");
+				}
+
+				// Append Server Response To Content String
+				Content = sb.toString();
+			} catch (Exception ex) {
+				ex.printStackTrace();
+				Error = ex.getMessage();
+			} finally {
+				try {
+					reader.close();
+				}catch (Exception ex) {
+					
+				}
+			}
+			return null;
+		}
+
+		
+		
+		
+		protected void onPostExecute(Void unused) {
+			// NOTE: You can call UI Element here.
+
+			// Close progress dialog
+			Dialog.dismiss();
+
+			if (Error != null) {
+				uiUpdate.setText("Output : " + Error);
+			} else {
+				// Show Response Json On Screen (activity)
+				uiUpdate.setText(Content);
+
+				//****************** Start Parse Response JSON Data *************
+
+				String OutputData = "";
+				JSONObject jsonResponse;
+
+				try {
+					
+					//  Creates a new JSONObject with name/value mappings from the JSON string.
+					jsonResponse = new JSONObject(Content);
+					
+					// Returns the value mapped by name if it exists and is a JSONArray.
+					
+					//******* Returns null otherwise. *******
+					//JSONArray jsonMainNode = jsonResponse.optJSONArray("Android");
+					JSONArray jsonMainNode = jsonResponse.optJSONArray("cliente");
+
+					//*********** Process each JSON Node ************
+
+					int lengthJsonArr = jsonMainNode.length();
+					System.out.println("tamanho: "+lengthJsonArr);
+
+					for (int i = 0; i < lengthJsonArr; i++) {
+						//****** Get Object for each JSON node. ***********
+						JSONObject jsonChildNode = jsonMainNode.getJSONObject(i);
+
+						//******* Fetch node values **********
+						
+						//String name = jsonChildNode.optString("name").toString();
+						//String number = jsonChildNode.optString("number").toString();
+						
+						String name = jsonChildNode.optString("id").toString();
+						String number = jsonChildNode.optString("nome").toString();
+						//String date_added = jsonChildNode.optString("date_added").toString();
+						String date_added = "";
+
+						OutputData += " Name 		    : " + name + " \n " + "Number 		: " + number + " \n " + "Time 				: " + date_added + " \n "+ "--------------------------------------------------\n";
+
+						// Log.i("JSON parse", song_name);
+					}
+					//****************** End Parse Response JSON Data *************
+
+					// Show Parsed Output on screen (activity)
+					jsonParsed.setText(OutputData);
+
+				} catch (JSONException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}*/
+    
+    
+    /*Banco de ajuda
+     * 	//http://android.programmerguru.com/what-is-asynctask-in-android/
+     * 
+     */
+    
+}
